@@ -26,6 +26,15 @@ export class AuthenticationController {
   constructor(private readonly authenticationService: AuthenticationService) {}
 
   @Public()
+  @Get('signup')
+  Get() {
+    try{
+      return "hello";
+    } catch(e) {
+      console.log(e)
+    }
+  }
+  @Public()
   @Post('signup')
   @UsePipes(new ValidationPipe())
   create(@Body() createAuthenticationDto: CreateAuthenticationDto) {
