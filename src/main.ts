@@ -28,6 +28,6 @@ async function bootstrap() {
   app.useStaticAssets(path.join(__dirname, '../public/uploads'));
   app.useGlobalPipes(new ValidationPipe({ transform: true }))
   app.enableCors();
-  await app.listen(3001);
+  await app.listen(process.env.PORT || 3001);
 }
 bootstrap();
