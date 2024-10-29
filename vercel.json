@@ -1,4 +1,4 @@
 {
     "version": 2,
-    "builds": [{ "src": "dist/main.ts", "use": "@vercel/node" }]
+    "builds": [{ "src": "dist/main.js", "use": "@vercel/node" }]
   }
