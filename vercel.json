@@ -1,0 +1,11 @@
+{
+    "version": 2,
+    "builds": [{ "src": "dist/main.ts", "use": "@vercel/node" }],
+    "env": {
+      "DATABASE_URL": "postgres://default:brKv7ZWfeTz4@ep-dawn-king-a4kobcee.us-east-1.aws.neon.tech:5432/verceldb?sslmode=require",
+      "AT_SECRET" :"at-secret",
+      "RT_SECRET":"rt-secret",
+      "SECRET_KEY" : "8gBm/:&EnhH.1/q",
+      "PRODUCT_CODE" : "EPAYTEST"
+    }
+  }
