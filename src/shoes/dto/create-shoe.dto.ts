@@ -46,8 +46,11 @@ export class CreateShoeDto {
   @IsArray()
   color_variation: any;
 
+
   @ApiProperty()
   deleteColorVariation?: [];
   @ApiProperty()
   deleteSizeVariation?: [];
+
+  slug_url?: string;
 }

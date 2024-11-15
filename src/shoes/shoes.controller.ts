@@ -26,6 +26,7 @@ import { uploadImageWithNoSizes } from 'src/common/helper';
 import { VariationDto } from './dto/create-variation.dto';
 import { SizeDto } from './dto/create-size.dto';
 import { AuthUserType } from 'src/common/FileType.type';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @Controller('shoes')
 @UsePipes(ValidationPipe)
@@ -54,11 +55,13 @@ export class ShoesController {
   }
 
   @Get()
+  @Public()
   findAll(@Query() query: ShoesType) {
     return this.shoesService.findAll(query);
   }
 
   @Get(':id')
+  @Public()
   findOne(@Param('id') id: string) {
     return this.shoesService.findOne(id);
   }
@@ -91,26 +94,31 @@ export class ShoesController {
   }
 
   @Post('user/cart')
+  @Public()
   createCart(@Body() createCartDto: CreateCartDto, @AuthUser() user: any) {
     createCartDto.user_id = user.sub;
     return this.shoesService.createCart(createCartDto);
   }
 
   @Get('user/cart')
+  @Public()
   findAllCart(@AuthUser() user: AuthUserType) {
     return this.shoesService.findAllCart(user.sub);
   }
 
   @Delete('user/cart/:id')
+  @Public()
   deleteCart(@Param('id') id: string) {
     return this.shoesService.deleteCart(id);
   }
 
   @Post('user/favorite/:id')
+  @Public()
   createFavorite(@Param('id') id: string, @AuthUser() user: AuthUserType) {
     return this.shoesService.createFavorites(id, user.sub);
   }
   @Get('user/favorite')
+  @Public()
   findAllFavorite(@AuthUser() user: AuthUserType) {
     return this.shoesService.findAllFavorites(user.sub);
   }

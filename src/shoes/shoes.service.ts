@@ -16,9 +16,14 @@ export class ShoesService {
     try {
       const result = await this.prisma.$transaction(async (prisma) => {
         delete createShoeDto['color_variation'];
+        const slug_url =
+          createShoeDto.title.replaceAll(' ', '_') +
+          '_' +
+          Math.floor(Math.random() * Date.now() * 0.0001).toString();
         const shoeResponse = await prisma.shoe.create({
           data: {
             title: createShoeDto.title,
+            slug_url: slug_url,
             brand_id: createShoeDto.brand_id,
             category_id: createShoeDto.category_id,
             price: createShoeDto.price,
@@ -58,7 +63,7 @@ export class ShoesService {
   async findAll(query: ShoesType) {
     const { category, price_min, price_max, color } = query;
     const colorArray = color ? color.split(',') : [];
-    return await this.prisma.shoe.findMany({
+    const shoeList = await this.prisma.shoe.findMany({
       where: {
         category: {
           title: {
@@ -89,6 +94,7 @@ export class ShoesService {
         createdAt: 'desc',
       },
     });
+    return shoeList;
   }
 
   findOne(id: string) {
