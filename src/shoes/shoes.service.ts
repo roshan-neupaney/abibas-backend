@@ -97,8 +97,8 @@ export class ShoesService {
     return shoeList;
   }
 
-  findOne(id: string) {
-    return this.prisma.shoe.findFirst({
+  async findOne(id: string) {
+    return await this.prisma.shoe.findFirst({
       where: {
         slug_url: id,
       },
