@@ -98,9 +98,9 @@ export class ShoesService {
   }
 
   findOne(id: string) {
-    return this.prisma.shoe.findUnique({
+    return this.prisma.shoe.findFirst({
       where: {
-        id,
+        slug_url: id,
       },
       include: {
         category: true,
