@@ -117,103 +117,106 @@ export class ShoesService {
   async update(id: string, updateShoeDto: UpdateShoeDto, colorVariation: any) {
     delete updateShoeDto['color_variation'];
     const { deleteColorVariation, deleteSizeVariation } = updateShoeDto;
-    const shoeResponse = await this.prisma.shoe.update({
-      where: { id },
-      data: {
-        title: updateShoeDto.title,
-        brand_id: updateShoeDto.brand_id,
-        price: updateShoeDto.price,
-        previous_price: updateShoeDto.previous_price,
-        description: updateShoeDto.description,
-        category_id: updateShoeDto.category_id,
-        details: updateShoeDto.details,
-        status: updateShoeDto.status,
-      },
-    });
-    if (deleteColorVariation?.length > 0) {
-      for (const item of deleteColorVariation) {
-        await this.prisma.colorVariation.delete({ where: { id: item } });
+    const result = await this.prisma.$transaction(async (prisma) => {
+      const shoeResponse = await prisma.shoe.update({
+        where: { slug_url: id },
+        data: {
+          title: updateShoeDto.title,
+          brand_id: updateShoeDto.brand_id,
+          price: updateShoeDto.price,
+          previous_price: updateShoeDto.previous_price,
+          description: updateShoeDto.description,
+          category_id: updateShoeDto.category_id,
+          details: updateShoeDto.details,
+          status: updateShoeDto.status,
+        },
+      });
+      if (deleteColorVariation?.length > 0) {
+        for (const item of deleteColorVariation) {
+          await prisma.colorVariation.delete({ where: { id: item } });
+        }
       }
-    }
-    if (deleteSizeVariation?.length > 0) {
-      for (const item of deleteSizeVariation) {
-        await this.prisma.size.delete({ where: { id: item } });
+      if (deleteSizeVariation?.length > 0) {
+        for (const item of deleteSizeVariation) {
+          await prisma.size.delete({ where: { id: item } });
+        }
       }
-    }
-    const colorVariationResponse = await Promise.all(
-      colorVariation.map(async (cv: VariationDto) => {
-        if (cv.id) {
-          const existingImage = await this.prisma.colorVariation.findUnique({
-            where: { id: cv.id },
-          });
-          if (existingImage && !(existingImage.image_url === cv.image_url)) {
-            const existingImagePath = join(
-              './public',
-              'uploads',
-              'images',
-              existingImage.image_url,
-            );
-            unlink(existingImagePath, (error) => {
-              if (error) return 'Error while updating shoe';
+      const colorVariationResponse = await Promise.all(
+        colorVariation.map(async (cv: VariationDto) => {
+          if (cv.id) {
+            const existingImage = await prisma.colorVariation.findUnique({
+              where: { id: cv.id },
             });
-          }
-          const resCV = await this.prisma.colorVariation.update({
-            where: {
-              id: cv.id,
-            },
-            data: {
-              color: JSON.parse(cv.color),
-              image_url: cv.image_url,
-            },
-          });
-          const resSize = await Promise.all(
-            cv.sizes.map(async (s: SizeDto) => {
-              if (s.id) {
-                return await this.prisma.size.update({
-                  where: {
-                    id: s.id,
-                  },
-                  data: {
-                    size: s.size,
-                    stock: s.stock,
-                  },
-                });
-              } else {
-                return await this.prisma.size.create({
+            if (existingImage && !(existingImage.image_url === cv.image_url)) {
+              const existingImagePath = join(
+                './public',
+                'uploads',
+                'images',
+                existingImage.image_url,
+              );
+              unlink(existingImagePath, (error) => {
+                if (error) return 'Error while updating shoe';
+              });
+            }
+            const resCV = await prisma.colorVariation.update({
+              where: {
+                id: cv.id,
+              },
+              data: {
+                color: JSON?.parse(cv?.color),
+                image_url: cv.image_url,
+              },
+            });
+            const resSize = await Promise.all(
+              cv.sizes.map(async (s: SizeDto) => {
+                if (s.id) {
+                  return await prisma.size.update({
+                    where: {
+                      id: s.id,
+                    },
+                    data: {
+                      size: s.size,
+                      stock: s.stock,
+                    },
+                  });
+                } else {
+                  return await prisma.size.create({
+                    data: {
+                      size: s.size,
+                      stock: s.stock,
+                      color_variation_id: resCV.id,
+                    },
+                  });
+                }
+              }),
+            );
+            return { ...resCV, sizes: resSize };
+          } else {
+            const resCV = await prisma.colorVariation.create({
+              data: {
+                color: JSON.parse(cv.color),
+                image_url: cv.image_url,
+                shoe_id: shoeResponse.id,
+              },
+            });
+            const resSize = await Promise.all(
+              cv.sizes.map(async (s: SizeDto) => {
+                return await prisma.size.create({
                   data: {
                     size: s.size,
                     stock: s.stock,
                     color_variation_id: resCV.id,
                   },
                 });
-              }
-            }),
-          );
-          return { ...resCV, sizes: resSize };
-        } else {
-          const resCV = await this.prisma.colorVariation.create({
-            data: {
-              color: JSON.parse(cv.color),
-              image_url: cv.image_url,
-              shoe_id: shoeResponse.id,
-            },
-          });
-          const resSize = await Promise.all(
-            cv.sizes.map(async (s: SizeDto) => {
-              return await this.prisma.size.create({
-                data: {
-                  size: s.size,
-                  stock: s.stock,
-                  color_variation_id: resCV.id,
-                },
-              });
-            }),
-          );
-          return { ...resCV, sizes: resSize };
-        }
-      }),
-    );
-    return { ...shoeResponse, colorVariation: colorVariationResponse };
+              }),
+            );
+            return { ...resCV, sizes: resSize };
+          }
+        }),
+      );
+      return { ...shoeResponse, colorVariation: colorVariationResponse };
+    });
+    return result;
   }
 
   remove(id: string) {
