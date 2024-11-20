@@ -13,7 +13,9 @@ export class CreateCartDto {
     @ApiProperty()
     @IsNotEmpty()
     color_variation_id: string;
-
+    
     user_id: string;
+    
+    @ApiProperty()
     count: number;
 }

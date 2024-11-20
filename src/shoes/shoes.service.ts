@@ -97,21 +97,39 @@ export class ShoesService {
     return shoeList;
   }
 
-  async findOne(id: string) {
-    return await this.prisma.shoe.findFirst({
-      where: {
-        slug_url: id,
-      },
-      include: {
-        category: true,
-        colorVariation: {
-          include: {
-            sizes: true,
+  async findOne(id: string, user_id: string) {
+    const result = await this.prisma.$transaction(async (prisma) => {
+      const response = await prisma.shoe.findUnique({
+        where: {
+          slug_url: id,
+        },
+        include: {
+          category: true,
+          colorVariation: {
+            include: {
+              sizes: true,
+            },
+          },
+          brand: true,
+          rating: {
+            orderBy: {
+              createdAt: 'desc',
+            },
+            include: {
+              user: true,
+            },
           },
         },
-        brand: true,
-      },
+      });
+      const favorite = await prisma.favorite.findFirst({
+        where: {
+          shoe_id: response.id,
+          user_id,
+        },
+      });
+      return { ...response, isFav: !!favorite };
     });
+    return result;
   }
 
   async update(id: string, updateShoeDto: UpdateShoeDto, colorVariation: any) {
@@ -228,35 +246,39 @@ export class ShoesService {
   }
 
   async createCart(createCartDto: CreateCartDto) {
-    const existingProduct = await this.prisma.cart.findFirst({
-      where: {
-        shoe_id: createCartDto.shoe_id,
-        size: createCartDto.size,
-        color_variation_id: createCartDto.color_variation_id,
-      },
-    });
-    if (existingProduct) {
-      return await this.prisma.cart.update({
-        data: {
-          count: existingProduct.count + 1,
-        },
+    return await this.prisma.$transaction(async (prisma) => {
+      const { user_id, shoe_id, size, color_variation_id } = createCartDto;
+      const existingProduct = await prisma.cart.findFirst({
         where: {
-          id: existingProduct.id,
+          user_id,
+          shoe_id,
+          size,
+          color_variation_id,
         },
       });
-    } else {
-      return await this.prisma.cart.create({
-        data: {
-          shoe_id: createCartDto.shoe_id,
-          size: createCartDto.size,
-          color_variation_id: createCartDto.color_variation_id,
-          user_id: createCartDto.user_id,
-        },
-      });
-    }
+      if (existingProduct) {
+        return await prisma.cart.update({
+          data: {
+            count: existingProduct.count + 1,
+          },
+          where: {
+            id: existingProduct.id,
+          },
+        });
+      } else {
+        return await prisma.cart.create({
+          data: {
+            shoe_id,
+            size,
+            color_variation_id,
+            user_id,
+          },
+        });
+      }
+    });
   }
 
-  async findAllCart(user_id: string) {
+  async findUserCart(user_id: string) {
     return await this.prisma.cart.findMany({
       where: {
         user_id,
@@ -269,6 +291,7 @@ export class ShoesService {
           select: {
             id: true,
             title: true,
+            price: true,
           },
         },
         colorVariation: {
@@ -296,9 +319,9 @@ export class ShoesService {
     }
   }
 
-  async createFavorites(shoeId: string, userId: string) {
+  async createFavorites(shoe_id: string, user_id: string) {
     const existingFavorite = await this.prisma.favorite.findFirst({
-      where: { shoe_id: shoeId },
+      where: { shoe_id, user_id },
     });
     if (existingFavorite) {
       return await this.prisma.favorite.delete({
@@ -309,8 +332,8 @@ export class ShoesService {
     } else {
       return await this.prisma.favorite.create({
         data: {
-          shoe_id: shoeId,
-          user_id: userId,
+          shoe_id,
+          user_id,
         },
       });
     }

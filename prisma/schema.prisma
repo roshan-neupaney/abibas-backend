@@ -68,7 +68,7 @@ model Shoe {
   details             String              
   cart                Cart[]
   order               Order[]         
-  favorite            Favorite?     
+  favorite            Favorite[]     
   status              Status              @default(PENDING)
   colorVariation      ColorVariation[]
   category            Category            @relation(fields:[category_id], references:[id])
@@ -134,7 +134,7 @@ model Brand {
 
 model Favorite {
   id                  String              @id @default(uuid())
-  shoe_id             String              @unique
+  shoe_id             String
   user_id             String              
   shoe                Shoe                @relation(fields:[shoe_id], references:[id])  
   user                MyUsers             @relation(fields:[user_id], references:[id])  
@@ -146,7 +146,9 @@ model Rating {
   id                  String              @id @default(uuid())
   shoe_id             String
   user_id             String              
-  rate                Float                 @default(0)
+  rate                Float               @default(0)
+  review              String?             @default("")
+  short_review        String              @default("")
   shoe                Shoe                @relation(fields:[shoe_id], references:[id])  
   user                MyUsers             @relation(fields:[user_id], references:[id])  
   createdAt           DateTime            @default(now()) @map("created_at")

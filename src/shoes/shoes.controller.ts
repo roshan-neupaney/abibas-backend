@@ -62,8 +62,8 @@ export class ShoesController {
 
   @Get(':id')
   @Public()
-  findOne(@Param('id') id: string) {
-    return this.shoesService.findOne(id);
+  findOne(@Param('id') id: string, @AuthUser() user: AuthUserType) {
+    return this.shoesService.findOne(id, user.sub);
   }
 
   @Patch(':id')
@@ -102,8 +102,8 @@ export class ShoesController {
 
   @Get('user/cart')
   @Public()
-  findAllCart(@AuthUser() user: AuthUserType) {
-    return this.shoesService.findAllCart(user.sub);
+  findUserCart(@AuthUser() user: AuthUserType) {
+    return this.shoesService.findUserCart(user.sub);
   }
 
   @Delete('user/cart/:id')
