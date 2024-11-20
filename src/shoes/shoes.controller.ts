@@ -100,6 +100,12 @@ export class ShoesController {
     return this.shoesService.createCart(createCartDto);
   }
 
+  @Post('user/cart/changeQuantity')
+  @Public()
+  changeCartProductQuantity(@Body("quantity") quantity: number, @Body("id") id: string) {
+    return this.shoesService.changeCartProductQuantity(id, quantity);
+  }
+
   @Get('user/cart')
   @Public()
   findUserCart(@AuthUser() user: AuthUserType) {

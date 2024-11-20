@@ -278,45 +278,69 @@ export class ShoesService {
     });
   }
 
-  async findUserCart(user_id: string) {
-    return await this.prisma.cart.findMany({
-      where: {
-        user_id,
+  async changeCartProductQuantity(id: string, quantity: number) {
+    return await this.prisma.cart.update({
+      data: {
+        count: quantity,
       },
-      select: {
-        id: true,
-        size: true,
-        count: true,
-        shoe: {
-          select: {
-            id: true,
-            title: true,
-            price: true,
-          },
-        },
-        colorVariation: {
-          select: {
-            id: true,
-            color: true,
-            image_url: true,
-          },
-        },
+      where: {
+        id: id,
       },
     });
   }
 
-  async deleteCart(id: string) {
-    const existingProduct = await this.prisma.cart.findFirst({
-      where: { id },
-    });
-    if (existingProduct.count === 1) {
-      return await this.prisma.cart.delete({ where: { id } });
-    } else {
-      return await this.prisma.cart.update({
-        data: { count: existingProduct.count - 1 },
-        where: { id: existingProduct.id },
+  async findUserCart(user_id: string) {
+    const result = await this.prisma.$transaction(async (prisma) => {
+      const cartResponse = await prisma.cart.findMany({
+        where: {
+          user_id,
+        },
+        select: {
+          id: true,
+          size: true,
+          count: true,
+          createdAt: true,
+          shoe: {
+            select: {
+              id: true,
+              title: true,
+              price: true,
+            },
+          },
+          colorVariation: {
+            select: {
+              id: true,
+              color: true,
+              image_url: true,
+              sizes: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'asc',
+        },
       });
-    }
+      const finalResponse = await Promise.all(
+        cartResponse.map(async (cart) => {
+          const favorite = await prisma.favorite.findFirst({
+            where: {
+              shoe_id: cart.shoe.id,
+              user_id,
+            },
+          });
+          const stock = cart.colorVariation.sizes.filter(
+            (s) => s.size === cart.size,
+          )[0];
+          return { ...cart, isFav: !!favorite, stock: stock.stock };
+        }),
+      );
+      return finalResponse;
+    });
+    return result;
+  }
+
+  async deleteCart(id: string) {
+    return await this.prisma.cart.delete({ where: { id } });
   }
 
   async createFavorites(shoe_id: string, user_id: string) {

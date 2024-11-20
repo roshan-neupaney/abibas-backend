@@ -54,6 +54,7 @@ model Cart {
   colorVariation      ColorVariation      @relation(fields:[color_variation_id], references:[id])
   user                MyUsers             @relation(fields:[user_id], references:[id])
   shoe                Shoe                @relation(fields: [shoe_id], references: [id])
+  createdAt           DateTime            @default(now()) @map("created_at")
 }
 
 model Shoe {
