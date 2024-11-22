@@ -248,6 +248,7 @@ export class ShoesService {
   async createCart(createCartDto: CreateCartDto) {
     return await this.prisma.$transaction(async (prisma) => {
       const { user_id, shoe_id, size, color_variation_id } = createCartDto;
+      // console.log(user_id)
       const existingProduct = await prisma.cart.findFirst({
         where: {
           user_id,

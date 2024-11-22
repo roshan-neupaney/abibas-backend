@@ -63,7 +63,7 @@ export class ShoesController {
   @Get(':id')
   @Public()
   findOne(@Param('id') id: string, @AuthUser() user: AuthUserType) {
-    return this.shoesService.findOne(id, user.sub);
+    return this.shoesService.findOne(id, user?.sub);
   }
 
   @Patch(':id')
