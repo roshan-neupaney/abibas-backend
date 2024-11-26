@@ -19,6 +19,7 @@ import { BrandModule } from './brand/brand.module';
 import { ColorModule } from './color/color.module';
 import { InteractionModule } from './interaction/interaction.module';
 import { RatingModule } from './rating/rating.module';
+import { LocationModule } from './location/location.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { RatingModule } from './rating/rating.module';
     ColorModule,
     InteractionModule,
     RatingModule,
+    LocationModule,
   ],
   controllers: [AppController],
   providers: [

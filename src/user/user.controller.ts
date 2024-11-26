@@ -16,6 +16,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerOptions } from 'src/common/multer.config';
+import { AuthUser } from 'src/common/decorators/user.decorator';
+import { AuthUserType } from 'src/common/FileType.type';
 
 @Controller('user')
 @ApiTags('user')
@@ -40,6 +42,11 @@ export class UserController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.userService.findOne(id);
+  }
+
+  @Get('all/myDetail')
+  findUserDetail(@AuthUser() user: AuthUserType) {
+    return this.userService.findUserDetail(user.sub);
   }
 
   @Patch(':id')

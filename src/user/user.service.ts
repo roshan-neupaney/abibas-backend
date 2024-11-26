@@ -83,6 +83,25 @@ export class UserService {
       },
     });
   }
+  async findUserDetail(id: string) {
+    return this.prisma.myUsers.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        id: true,
+        createdAt: true,
+        updatedAt: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        mobile: true,
+        role: true,
+        status: true,
+        image_name: true,
+      },
+    });
+  }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
     return await this.prisma.myUsers.update({

@@ -192,10 +192,45 @@ model Payment {
   status              PaymentStatus       @default(PENDING)
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
-
   order               Order               @relation(fields: [orderId], references: [id])
 
 }
+
+
+model Province {
+  id                  String                 @id @default(uuid())
+  name                String
+  areaSqKm            String
+  website             String
+  headquarter         String
+  districts           District[]
+}
+
+model District {
+  id                  String                 @id @default(uuid())
+  provinceId          String
+  name                String
+  areaSqKm            String
+  website             String
+  headquarter         String
+  province            Province            @relation(fields: [provinceId], references: [id])
+  municipalities      Municipality[]
+}
+
+model Municipality {
+  id                  String                 @id @default(uuid())
+  districtId          String
+  categoryId          Int
+  name                String
+  areaSqKm            String
+  website             String
+  wards               Int[]
+  district            District            @relation(fields: [districtId], references: [id])
+}
+
+
+
+
 enum Status {
   PENDING
   ACTIVE
