@@ -11,8 +11,6 @@ import {
   ValidationPipe,
   Query,
   UploadedFiles,
-  HttpException,
-  HttpStatus,
 } from '@nestjs/common';
 import { ShoesService } from './shoes.service';
 import { CreateShoeDto } from './dto/create-shoe.dto';
@@ -23,8 +21,6 @@ import { ShoesType } from './shoes.types';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { AuthUser } from 'src/common/decorators/user.decorator';
 import { uploadImageWithNoSizes } from 'src/common/helper';
-import { VariationDto } from './dto/create-variation.dto';
-import { SizeDto } from './dto/create-size.dto';
 import { AuthUserType } from 'src/common/FileType.type';
 import { Public } from 'src/common/decorators/public.decorator';
 

@@ -16,28 +16,27 @@ export class EsewaService {
     hash: string,
     shoe_id: string,
   ) {
-    if (decodedData.status === 'COMPLETE') {
-      console.log(user_id);
-      if (hash === decodedData.signature) {
-        return await this.prisma.$transaction(async (prisma) => {
-          const orderRes = await prisma.order.create({
-            data: {
-              user_id: user_id,
-              shoe_id: shoe_id,
-              totalAmount: decodedData.total_amount,
-            },
-          });
-          const paymentRes = await prisma.payment.create({
-            data: {
-              orderId: orderRes.id,
-              amount: decodedData.total_amount,
-            },
-          });
-          return { orderId: orderRes.id, paymentId: paymentRes.id };
-        });
+    // if (decodedData.status === 'COMPLETE') {
+    //   console.log(user_id);
+    //   if (hash === decodedData.signature) {
+    //     return await this.prisma.$transaction(async (prisma) => {
+    //       const orderRes = await prisma.order.create({
+    //         data: {
+    //           user_id: user_id,
+    //           total_amount: decodedData.total_amount,
+    //         },
+    //       });
+    //       const paymentRes = await prisma.payment.create({
+    //         data: {
+    //           orderId: orderRes.id,
+    //           amount: decodedData.total_amount,
+    //         },
+    //       });
+    //       return { orderId: orderRes.id, paymentId: paymentRes.id };
+    //     });
         
-      }
-    }
+    //   }
+    // }
   }
 
   async findProduct(id: string) {
