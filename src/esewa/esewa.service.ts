@@ -3,40 +3,31 @@ import axios from 'axios';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AuthUserType } from 'src/common/FileType.type';
 import { PaymentService } from './payment.service';
+import { HttpService } from '@nestjs/axios';
+import { lastValueFrom } from 'rxjs';
+import { CreateOrderItemsDto } from 'src/order/dto/create-order-items.dto';
 
 @Injectable()
 export class EsewaService {
   constructor(
     private prisma: PrismaService,
     private paymentService: PaymentService,
+    private readonly httpService: HttpService,
   ) {}
-  async Payment(
-    decodedData: any,
-    user_id: string,
-    hash: string,
-    shoe_id: string,
-  ) {
-    // if (decodedData.status === 'COMPLETE') {
-    //   console.log(user_id);
-    //   if (hash === decodedData.signature) {
-    //     return await this.prisma.$transaction(async (prisma) => {
-    //       const orderRes = await prisma.order.create({
-    //         data: {
-    //           user_id: user_id,
-    //           total_amount: decodedData.total_amount,
-    //         },
-    //       });
-    //       const paymentRes = await prisma.payment.create({
-    //         data: {
-    //           orderId: orderRes.id,
-    //           amount: decodedData.total_amount,
-    //         },
-    //       });
-    //       return { orderId: orderRes.id, paymentId: paymentRes.id };
-    //     });
-        
-    //   }
-    // }
+  async Payment(decodedData: any, hash: string, id: string) {
+    if (decodedData.status === 'COMPLETE') {
+      if (hash === decodedData.signature) {
+        return await this.prisma.$transaction(async (prisma) => {
+          const paymentRes = await prisma.payment.create({
+            data: {
+              order_id: id,
+              amount: decodedData.total_amount,
+            },
+          });
+          return { paymentId: paymentRes.id, id };
+        });
+      }
+    }
   }
 
   async findProduct(id: string) {
@@ -59,13 +50,37 @@ export class EsewaService {
       );
 
       if (res.data.status === 'COMPLETE') {
-        await this.prisma.order.update({
+        const orderRes = await prisma.order.update({
           where: { id: orderId },
           data: { status: 'COMPLETED' },
+          include: {
+            orderItems: true,
+          },
         });
-        await this.prisma.payment.update({
+        await prisma.payment.update({
           where: { id: paymentId },
           data: { status: 'SUCCESS' },
+        });
+
+        orderRes.orderItems.map(async (items: CreateOrderItemsDto) => {
+          const sizeRes = await prisma.size.findFirst({
+            where: {
+              color_variation_id: items.color_variation_id,
+              size: items.size,
+            },
+          });
+          await prisma.size.update({
+            where: { id: sizeRes.id },
+            data: {
+              size: (Number(sizeRes.stock) - items.count).toString(),
+            },
+          });
+          await prisma.cart.deleteMany({
+            where: {
+              color_variation_id: items.color_variation_id,
+              size: items.size,
+            },
+          });
         });
       } else {
         await this.prisma.order.update({
@@ -78,5 +93,28 @@ export class EsewaService {
         });
       }
     });
+  }
+
+  async test(data: any) {
+    console.log(data);
+    try {
+      const response = await lastValueFrom(
+        this.httpService.post(
+          'https://rc-epay.esewa.com.np/api/epay/main/v2/form',
+          data, // the data you want to send to eSewa
+          {
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+          },
+        ),
+      );
+
+      return response.data;
+    } catch (error: any) {
+      console.log(error);
+      // handle the error
+      throw new Error('Payment request failed');
+    }
   }
 }

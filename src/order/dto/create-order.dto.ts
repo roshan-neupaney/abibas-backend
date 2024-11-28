@@ -42,10 +42,23 @@ export class CreateOrderDto {
     @IsNotEmpty()
     @IsString()
     total_amount: string;
+
+    @ApiProperty()
+    @IsNotEmpty()
+    @IsString()
+    items_total_price: string;
     
     @ApiProperty()
     @IsOptional()
     tax_amount?: string;
+
+    @ApiProperty()
+    @IsOptional()
+    transaction_uuid?: string;
+    
+    @ApiProperty()
+    @IsOptional()
+    delivery_charge?: string;
     
     @ApiProperty()
     status?: OrderStatus;

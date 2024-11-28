@@ -1,4 +1,12 @@
-import { Controller, Get, Param, Render, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Render,
+  Query,
+  Post,
+  Body,
+} from '@nestjs/common';
 import { EsewaService } from './esewa.service';
 import * as crypto from 'crypto';
 import { ConfigService } from '@nestjs/config';
@@ -42,31 +50,55 @@ export class EsewaController {
     return { product };
   }
 
-  // @Public()
-  // @Get('initialpayment/:id')
-  // async create(
-  //   @Query('data') data: string,
-  //   @Param('id') id: string,
-  //   @AuthUser() user: AuthUserType,
-  // ) {
-  //   const decodedString = atob(data);
-  //   const decodedData = JSON.parse(decodedString);
+  @Public()
+  @Get('initialpayment/:id')
+  async create(
+    @Query('data') data: string,
+    @Param('id') id: string,
+    @AuthUser() user: AuthUserType,
+  ) {
+    const decodedString = atob(data);
+    const decodedData = JSON.parse(decodedString);
 
-  //   const key = this.config.get<string>('SECRET_KEY');
+    const key = this.config.get<string>('SECRET_KEY');
 
-  //   const amount = decodedData.total_amount.replace(',', '');
-  //   const message = `transaction_code=${decodedData.transaction_code},status=${decodedData.status},total_amount=${amount},transaction_uuid=${decodedData.transaction_uuid},product_code=${decodedData.product_code},signed_field_names=${decodedData.signed_field_names}`;
-  //   var hash = crypto
-  //     .createHmac('sha256', key)
-  //     .update(message)
-  //     .digest('base64');
-  //   const result = await this.esewaService.Payment(decodedData, user.sub, hash, id);
-  //   await this.paymentService.verifyPayment(
-  //     decodedData.product_code,
-  //     decodedData.total_amount,
-  //     decodedData.transaction_uuid,
-  //     result.orderId,
-  //     result.paymentId,
-  //   );
-  // }
+    const amount = decodedData.total_amount.replace(',', '');
+    
+    const message = `transaction_code=${decodedData.transaction_code},status=${decodedData.status},total_amount=${amount},transaction_uuid=${decodedData.transaction_uuid},product_code=${decodedData.product_code},signed_field_names=${decodedData.signed_field_names}`;
+
+    var hash = crypto
+      .createHmac('sha256', key)
+      .update(message)
+      .digest('base64');
+
+    const result = await this.esewaService.Payment(
+      decodedData,
+      hash,
+      id,
+    );
+    await this.paymentService.verifyPayment(
+      decodedData.product_code,
+      decodedData.total_amount,
+      decodedData.transaction_uuid,
+      result.id,
+      result.paymentId,
+    );
+  }
+
+  @Public()
+  @Post('test')
+  async test(@Body() payload: any) {
+    const uuid = Math.floor(Math.random() * 10 * Date.now());
+    const product_code = this.config.get<string>('PRODUCT_CODE');
+    const key = this.config.get<string>('SECRET_KEY');
+
+    const message = `total_amount=${payload.total_amount},transaction_uuid=${uuid.toString()},product_code=${product_code}`;
+    var hash = crypto
+      .createHmac('sha256', key)
+      .update(message)
+      .digest('base64');
+    payload.transaction_uuid = uuid.toString();
+    payload.signature = hash;
+    return await this.esewaService.test(payload);
+  }
 }

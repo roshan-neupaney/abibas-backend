@@ -3,6 +3,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateOrderItemsDto } from './dto/create-order-items.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class OrderService {
@@ -18,7 +19,9 @@ export class OrderService {
         ward: createOrderDto.ward,
         phone: createOrderDto.phone,
         total_amount: createOrderDto.total_amount,
+        items_total_price: createOrderDto.items_total_price,
         tax_amount: createOrderDto.tax_amount,
+        delivery_charge: createOrderDto.delivery_charge,
         status: createOrderDto.status,
         shipping_status: createOrderDto.shipping_status,
         user_id: createOrderDto.user_id,
@@ -41,16 +44,28 @@ export class OrderService {
     return this.prisma.order.findMany({
       include: {
         orderItems: true,
+        payment: true
       },
     });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} order`;
+  findOne(id: string) {
+    return this.prisma.order.findUnique({
+      where: {id},
+      include: {
+        orderItems: true
+      }
+    });
   }
 
-  update(id: number, updateOrderDto: UpdateOrderDto) {
-    return `This action updates a #${id} order`;
+  update(id: string, updateOrderDto: UpdateOrderDto) {
+    return this.prisma.order.update({
+      where: {id},
+      data: updateOrderDto as Prisma.OrderUncheckedUpdateInput,
+      include: {
+        orderItems: true
+      }
+    });
   }
 
   remove(id: number) {

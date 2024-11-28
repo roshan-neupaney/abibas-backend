@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
+import { CreateOrderItemsDto } from 'src/order/dto/create-order-items.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -19,14 +20,41 @@ export class PaymentService {
       );
 
       if (res.data.status === 'COMPLETE') {
-        await prisma.order.update({
+       const orderRes = await prisma.order.update({
             where: { id: orderId },
             data: { status: 'COMPLETED' },
+            include: {
+              orderItems: true,
+            }
         });
         await prisma.payment.update({
           where: { id: paymentId },
           data: { status: 'SUCCESS' },
         });
+        for (const item of orderRes.orderItems) {
+          const sizeRes = await prisma.size.findFirst({
+            where: {
+              color_variation_id: item.color_variation_id,
+              size: item.size,
+            },
+          });
+  
+          if (sizeRes) {
+            await prisma.size.update({
+              where: { id: sizeRes.id },
+              data: {
+                stock: (Number(sizeRes.stock) - item.count).toString(),
+              },
+            });
+  
+            await prisma.cart.deleteMany({
+              where: {
+                color_variation_id: item.color_variation_id,
+                size: item.size,
+              },
+            });
+          }
+        }
       } else {
         await prisma.order.update({
           where: { id: orderId },

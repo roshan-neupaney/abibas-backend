@@ -316,6 +316,7 @@ export class ShoesService {
               sizes: true,
             },
           },
+          color_variation_id: true,
         },
         orderBy: {
           createdAt: 'asc',

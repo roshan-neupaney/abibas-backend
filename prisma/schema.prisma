@@ -178,7 +178,10 @@ model Order {
   phone               String
   user_id             String               
   total_amount        String
+  items_total_price   String
+  transaction_uuid    String?
   tax_amount          String?
+  delivery_charge     String?
   user                MyUsers             @relation(fields:[user_id], references:[id])        
   status              OrderStatus         @default(PENDING)
   shipping_status     ShippingStatus      @default(PENDING)
@@ -193,7 +196,7 @@ model OrderItems {
   id                  String              @id @default(uuid())
   shoe_id             String
   order_id            String
-  price              String
+  price               String
   size                String
   color_variation_id  String
   count               Int                 @default(1)
@@ -220,13 +223,12 @@ enum ShippingStatus {
 
 model Payment {
   id                  String              @id @default(uuid())
-  orderId             String              @unique
+  order_id            String              @unique
   amount              String
   status              PaymentStatus       @default(PENDING)
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
-  order               Order               @relation(fields: [orderId], references: [id])
-
+  order               Order               @relation(fields: [order_id], references: [id])
 }
 
 model Province {
