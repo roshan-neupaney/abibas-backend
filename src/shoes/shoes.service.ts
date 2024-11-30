@@ -86,11 +86,7 @@ export class ShoesService {
       },
       include: {
         category: true,
-        colorVariation: {
-          include: {
-            color_variation_images: true,
-          },
-        },
+        colorVariation: true,
         brand: true,
         rating: true,
       },
@@ -119,7 +115,6 @@ export class ShoesService {
           colorVariation: {
             include: {
               sizes: true,
-              color_variation_images: true,
             },
           },
           brand: true,
@@ -384,6 +379,17 @@ export class ShoesService {
       select: {
         id: true,
         shoe: true,
+      },
+    });
+  }
+
+  async createColorVariationImages(id: string, images: string[]) {
+    return await this.prisma.colorVariation.update({
+      where: {
+        id
+      },
+      data: {
+        images,
       },
     });
   }

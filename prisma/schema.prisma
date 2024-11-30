@@ -99,20 +99,10 @@ model ColorVariation {
   shoe_id                 String
   cart                    Cart[]
   orderItems              OrderItems[]
-  color_variation_images  ColorVariationImages[]
+  images                  String[]                  @default([])
   shoe                    Shoe                      @relation(fields:[shoe_id], references:[id], onDelete: Cascade)             
   createdAt               DateTime                  @default(now()) @map("created_at")
   updatedAt               DateTime                  @updatedAt
-}
-
-model ColorVariationImages {
-  id                  String              @id @default(uuid())
-  images              String[] 
-  color_variation_id  String
-  colorVariation      ColorVariation      @relation(fields:[color_variation_id], references:[id], onDelete: Cascade) 
-  createdAt           DateTime            @default(now()) @map("created_at")
-  updatedAt           DateTime            @updatedAt
-  
 }
 
 model Color {

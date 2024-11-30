@@ -128,10 +128,15 @@ export class ShoesController {
 
   @Post('colorVariation/images/:id')
   @UseInterceptors(AnyFilesInterceptor())
-  createColorVariationImages(
+  async createColorVariationImages(
     @Param('id') id: string,
     @UploadedFiles() files: Express.Multer.File[],
   ){
-    console.log(files)
+    let images = []
+    for(const file of files) {
+      const image = await uploadImageWithNoSizes(file);
+      images.push(image.fileName);
+    }
+    return this.shoesService.createColorVariationImages(id, images)
   }
 }
