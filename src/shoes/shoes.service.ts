@@ -86,7 +86,11 @@ export class ShoesService {
       },
       include: {
         category: true,
-        colorVariation: true,
+        colorVariation: {
+          include: {
+            color_variation_images: true,
+          },
+        },
         brand: true,
         rating: true,
       },
@@ -99,15 +103,23 @@ export class ShoesService {
 
   async findOne(id: string, user_id: string) {
     const result = await this.prisma.$transaction(async (prisma) => {
-      const response = await prisma.shoe.findUnique({
+      const response = await prisma.shoe.findFirst({
         where: {
-          slug_url: id,
+          OR: [
+            {
+              slug_url: id,
+            },
+            {
+              id,
+            },
+          ],
         },
         include: {
           category: true,
           colorVariation: {
             include: {
               sizes: true,
+              color_variation_images: true,
             },
           },
           brand: true,
@@ -238,9 +250,9 @@ export class ShoesService {
   }
 
   remove(id: string) {
-    return this.prisma.shoe.delete({
+    return this.prisma.shoe.deleteMany({
       where: {
-        id,
+        OR: [{ id }, { slug_url: id }],
       },
     });
   }

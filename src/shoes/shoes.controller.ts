@@ -119,9 +119,19 @@ export class ShoesController {
   createFavorite(@Param('id') id: string, @AuthUser() user: AuthUserType) {
     return this.shoesService.createFavorites(id, user.sub);
   }
+
   @Get('user/favorite')
   @Public()
   findAllFavorite(@AuthUser() user: AuthUserType) {
     return this.shoesService.findAllFavorites(user.sub);
+  }
+
+  @Post('colorVariation/images/:id')
+  @UseInterceptors(AnyFilesInterceptor())
+  createColorVariationImages(
+    @Param('id') id: string,
+    @UploadedFiles() files: Express.Multer.File[],
+  ){
+    console.log(files)
   }
 }

@@ -92,16 +92,27 @@ model Category {
 }
 
 model ColorVariation {
+  id                      String                    @id @default(uuid())
+  color                   String[]                  @default([])
+  image_url               String 
+  sizes                   Size[]   
+  shoe_id                 String
+  cart                    Cart[]
+  orderItems              OrderItems[]
+  color_variation_images  ColorVariationImages[]
+  shoe                    Shoe                      @relation(fields:[shoe_id], references:[id], onDelete: Cascade)             
+  createdAt               DateTime                  @default(now()) @map("created_at")
+  updatedAt               DateTime                  @updatedAt
+}
+
+model ColorVariationImages {
   id                  String              @id @default(uuid())
-  color               String[]            @default([])
-  image_url           String 
-  sizes               Size[]   
-  shoe_id             String
-  cart                Cart[]
-  orderItems          OrderItems[]
-  shoe                Shoe              @relation(fields:[shoe_id], references:[id], onDelete: Cascade)             
-  createdAt           DateTime          @default(now()) @map("created_at")
-  updatedAt           DateTime          @updatedAt
+  images              String[] 
+  color_variation_id  String
+  colorVariation      ColorVariation      @relation(fields:[color_variation_id], references:[id], onDelete: Cascade) 
+  createdAt           DateTime            @default(now()) @map("created_at")
+  updatedAt           DateTime            @updatedAt
+  
 }
 
 model Color {
