@@ -15,9 +15,9 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { multerOptions } from 'src/common/multer.config';
 import { AuthUser } from 'src/common/decorators/user.decorator';
 import { AuthUserType } from 'src/common/FileType.type';
+import { uploadImageWithSizes } from 'src/common/helper';
 
 @Controller('user')
 @ApiTags('user')
@@ -25,12 +25,18 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
-  @UseInterceptors(FileInterceptor('file', multerOptions))
-  create(
+  @UseInterceptors(FileInterceptor('file'))
+  async create(
     @Body() createUserDto: CreateUserDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    createUserDto.image_name = file?.filename;
+    let uploadedFile: any;
+    if (file) {
+      uploadedFile = await uploadImageWithSizes(file);
+    }
+    if (uploadedFile) {
+      createUserDto.image_name = file?.filename;
+    }
     return this.userService.create(createUserDto);
   }
 
@@ -50,13 +56,19 @@ export class UserController {
   }
 
   @Patch(':id')
-  @UseInterceptors(FileInterceptor('file', multerOptions))
-  update(
+  @UseInterceptors(FileInterceptor('file'))
+  async update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    updateUserDto.image_name = file?.filename;
+    let uploadedFile: any;
+    if (file) {
+      uploadedFile = await uploadImageWithSizes(file);
+    }
+    if (uploadedFile) {
+      updateUserDto.image_name = file?.filename;
+    }
     return this.userService.update(id, updateUserDto);
   }
 

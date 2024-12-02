@@ -131,12 +131,14 @@ export class ShoesController {
   async createColorVariationImages(
     @Param('id') id: string,
     @UploadedFiles() files: Express.Multer.File[],
+    @Body('file') image: any
   ){
     let images = []
     for(const file of files) {
       const image = await uploadImageWithNoSizes(file);
       images.push(image.fileName);
     }
+    // console.log(files, images, image)
     return this.shoesService.createColorVariationImages(id, images)
   }
 }
