@@ -23,6 +23,7 @@ import { AuthUser } from 'src/common/decorators/user.decorator';
 import { uploadImageWithNoSizes } from 'src/common/helper';
 import { AuthUserType } from 'src/common/FileType.type';
 import { Public } from 'src/common/decorators/public.decorator';
+import { CreateColorVariationImagesDto } from './dto/create-colorVariationImages.dto';
 
 @Controller('shoes')
 @UsePipes(ValidationPipe)
@@ -126,19 +127,51 @@ export class ShoesController {
     return this.shoesService.findAllFavorites(user.sub);
   }
 
-  @Post('colorVariation/images/:id')
+  @Post('colorVariation/images')
   @UseInterceptors(AnyFilesInterceptor())
   async createColorVariationImages(
-    @Param('id') id: string,
     @UploadedFiles() files: Express.Multer.File[],
-    @Body('file') image: any
+    @Body() createColorVariationImages: any
   ){
-    let images = []
-    for(const file of files) {
-      const image = await uploadImageWithNoSizes(file);
-      images.push(image.fileName);
+    const {variation} = createColorVariationImages;
+    console.log(typeof(createColorVariationImages))
+    for(const payload of variation){
+      if(typeof(payload.file) !== 'string'){
+        const file = files.shift();
+        const image = await uploadImageWithNoSizes(file);
+        payload.image_url = image.fileName;
+      }
     }
+    console.log(variation)
+    return this.shoesService.createColorVariationImages(variation)
     // console.log(files, images, image)
-    return this.shoesService.createColorVariationImages(id, images)
+  }
+
+  @Patch('colorVariation/images')
+  @UseInterceptors(AnyFilesInterceptor())
+  async updateColorVariationImages(
+    @UploadedFiles() files: Express.Multer.File[],
+    @Body() updateColorVariationImages: any
+  ){
+    const {variation} = updateColorVariationImages;
+    for(const payload of variation){
+      if(typeof(payload.file) !== 'string'){
+        const file = files.shift();
+        const image = await uploadImageWithNoSizes(file);
+        payload.image_url = image.fileName;
+        console.log('object')
+      } else {
+        console.log('string')
+        payload.image_url = payload.file;
+      }
+    }
+    console.log(variation)
+    return this.shoesService.updateColorVariationImages(variation)
+    // console.log(files, images, image)
+  }
+
+  @Delete('colorVariation/images/:id')
+  async deleteColorVariationImages(@Param('id') id: string) {
+    return await this.shoesService.deleteColorVariationImages(id);
   }
 }

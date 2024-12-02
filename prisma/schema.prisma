@@ -6,8 +6,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL_PRISMA_URL")
-  directUrl = env("DATABASE_URL_URL_NON_POOLING")
+  url      = env("DATABASE_URL")
 }
 
 model MyUsers {
@@ -100,8 +99,17 @@ model ColorVariation {
   shoe_id                 String
   cart                    Cart[]
   orderItems              OrderItems[]
-  images                  String[]                  @default([])
+  colorVariationImages    ColorVariationImages[]    
   shoe                    Shoe                      @relation(fields:[shoe_id], references:[id], onDelete: Cascade)             
+  createdAt               DateTime                  @default(now()) @map("created_at")
+  updatedAt               DateTime                  @updatedAt
+}
+
+model ColorVariationImages {
+  id                      String                    @id @default(uuid())
+  image_url               String 
+  color_variation_id      String
+  colorVariation          ColorVariation                      @relation(fields:[color_variation_id], references:[id], onDelete: Cascade)             
   createdAt               DateTime                  @default(now()) @map("created_at")
   updatedAt               DateTime                  @updatedAt
 }

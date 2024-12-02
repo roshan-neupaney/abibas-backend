@@ -8,6 +8,7 @@ import { unlink } from 'fs';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { VariationDto } from './dto/create-variation.dto';
 import { SizeDto } from './dto/create-size.dto';
+import { CreateColorVariationImagesDto } from './dto/create-colorVariationImages.dto';
 
 @Injectable()
 export class ShoesService {
@@ -86,7 +87,15 @@ export class ShoesService {
       },
       include: {
         category: true,
-        colorVariation: true,
+        colorVariation: {
+          include: {
+            colorVariationImages: {
+              orderBy: {
+                createdAt: 'desc',
+              },
+            },
+          },
+        },
         brand: true,
         rating: true,
       },
@@ -115,6 +124,11 @@ export class ShoesService {
           colorVariation: {
             include: {
               sizes: true,
+              colorVariationImages: {
+                orderBy: {
+                  createdAt: 'asc',
+                },
+              },
             },
           },
           brand: true,
@@ -383,14 +397,48 @@ export class ShoesService {
     });
   }
 
-  async createColorVariationImages(id: string, images: string[]) {
-    return await this.prisma.colorVariation.update({
-      where: {
-        id
-      },
-      data: {
-        images,
-      },
+  async createColorVariationImages(createColorVariationImages: any) {
+    const result = await Promise.all(
+      createColorVariationImages.map(async (variation) => {
+        return await this.prisma.colorVariationImages.create({
+          data: {
+            color_variation_id: variation.color_variation_id,
+            image_url: variation.image_url,
+          },
+        });
+      }),
+    );
+    return result;
+  }
+  async updateColorVariationImages(updateColorVariationImages: any) {
+    const result = await Promise.all(
+      updateColorVariationImages.map(async (variation) => {
+        if (variation.id) {
+          return await this.prisma.colorVariationImages.update({
+            where: {
+              id: variation.id,
+            },
+            data: {
+              color_variation_id: variation.color_variation_id,
+              image_url: variation.image_url,
+            },
+          });
+        } else {
+          return await this.prisma.colorVariationImages.create({
+            data: {
+              color_variation_id: variation.color_variation_id,
+              image_url: variation.image_url,
+            },
+          });
+        }
+      }),
+    );
+    return result;
+  }
+
+  async deleteColorVariationImages(id: string) {
+    return this.prisma.colorVariationImages.delete({
+      where: { id },
     });
   }
 }
