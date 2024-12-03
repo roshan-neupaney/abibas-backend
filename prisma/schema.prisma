@@ -109,7 +109,7 @@ model ColorVariationImages {
   id                      String                    @id @default(uuid())
   image_url               String 
   color_variation_id      String
-  colorVariation          ColorVariation                      @relation(fields:[color_variation_id], references:[id], onDelete: Cascade)             
+  colorVariation          ColorVariation            @relation(fields:[color_variation_id], references:[id], onDelete: Cascade)             
   createdAt               DateTime                  @default(now()) @map("created_at")
   updatedAt               DateTime                  @updatedAt
 }

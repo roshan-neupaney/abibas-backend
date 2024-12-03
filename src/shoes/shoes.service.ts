@@ -9,6 +9,7 @@ import { CreateCartDto } from './dto/create-cart.dto';
 import { VariationDto } from './dto/create-variation.dto';
 import { SizeDto } from './dto/create-size.dto';
 import { CreateColorVariationImagesDto } from './dto/create-colorVariationImages.dto';
+import { v2 as cloudinary } from 'cloudinary';
 
 @Injectable()
 export class ShoesService {
@@ -187,15 +188,24 @@ export class ShoesService {
               where: { id: cv.id },
             });
             if (existingImage && !(existingImage.image_url === cv.image_url)) {
-              const existingImagePath = join(
-                './public',
-                'uploads',
-                'images',
-                existingImage.image_url,
-              );
-              unlink(existingImagePath, (error) => {
-                if (error) return 'Error while updating shoe';
-              });
+              if (process.env.STORAGE == 'cloudinary') {
+                const publicId = existingImage.image_url;
+                const result = await cloudinary.uploader.destroy(publicId);
+                if (result.result !== 'ok') {
+                  throw new Error('Error deleting image from Cloudinary');
+                }
+              } else {
+                const existingImagePath = join(
+                  './public',
+                  'uploads',
+                  'images',
+                  existingImage.image_url,
+                );
+        
+                unlink(existingImagePath, (error) => {
+                  if (error) return 'Error while updating shoe';
+                });
+              }
             }
             const resCV = await prisma.colorVariation.update({
               where: {
@@ -398,8 +408,11 @@ export class ShoesService {
   }
 
   async createColorVariationImages(createColorVariationImages: any) {
+    const delay = (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
     const result = await Promise.all(
-      createColorVariationImages.map(async (variation) => {
+      createColorVariationImages.map(async (variation, index: number) => {
+        await delay(index * 5);
         return await this.prisma.colorVariationImages.create({
           data: {
             color_variation_id: variation.color_variation_id,
@@ -410,10 +423,37 @@ export class ShoesService {
     );
     return result;
   }
+
   async updateColorVariationImages(updateColorVariationImages: any) {
     const result = await Promise.all(
       updateColorVariationImages.map(async (variation) => {
         if (variation.id) {
+          const existingImage =
+            await this.prisma.colorVariationImages.findUnique({
+              where: { id: variation.id },
+            });
+          if (
+            existingImage &&
+            !(existingImage.image_url === variation.image_url)
+          ) {
+            if (process.env.STORAGE == 'cloudinary') {
+              const publicId = existingImage.image_url;
+              const result = await cloudinary.uploader.destroy(publicId);
+              if (result.result !== 'ok') {
+                throw new Error('Error deleting image from Cloudinary');
+              }
+            } else {
+              const existingImagePath = join(
+                './public',
+                'uploads',
+                'images',
+                existingImage.image_url,
+              );
+              unlink(existingImagePath, (error) => {
+                if (error) return 'Error while updating shoe';
+              });
+            }
+          }
           return await this.prisma.colorVariationImages.update({
             where: {
               id: variation.id,
@@ -437,6 +477,29 @@ export class ShoesService {
   }
 
   async deleteColorVariationImages(id: string) {
+    const existingImage = await this.prisma.colorVariationImages.findUnique({
+      where: { id },
+    });
+    if (existingImage) {
+      if (process.env.STORAGE == 'cloudinary') {
+        const publicId = existingImage.image_url;
+        const result = await cloudinary.uploader.destroy(publicId);
+        if (result.result !== 'ok') {
+          throw new Error('Error deleting image from Cloudinary');
+        }
+      } else {
+        const existingImagePath = join(
+          './public',
+          'uploads',
+          'images',
+          existingImage.image_url,
+        );
+
+        unlink(existingImagePath, (error) => {
+          if (error) return 'Error while updating shoe';
+        });
+      }
+    }
     return this.prisma.colorVariationImages.delete({
       where: { id },
     });

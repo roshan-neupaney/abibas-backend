@@ -7,26 +7,27 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import * as express from 'express';
 import { config } from 'dotenv';
-import { Logger } from '@nestjs/common';
+import { v2 as cloudinary } from 'cloudinary';
 
-config({ path: process.env.NODE_ENV === 'development' ? '.env.development' : '.env.prod' });
+config({
+  path:
+    process.env.NODE_ENV === 'development' ? '.env.development' : '.env.prod',
+});
 const server = express();
 
 async function bootstrap() {
-  // const app = await NestFactory.create<NestExpressApplication>(AppModule);
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, new ExpressAdapter(server));
-
- 
-  if (process.env.NODE_ENV === 'production') {
-    // Production-specific logic
-    console.log('production')
-  } else {
-    // Development-specific logic
-    console.log('dev')
+  if (process.env.STORAGE === 'cloudinary') {
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+    });
+    console.log('Cloudinary configuration has been initialized.');
   }
-
-  const logger = new Logger('VercelLogger');
-logger.error('An error occurred while processing the request.')
+  const app = await NestFactory.create<NestExpressApplication>(
+    AppModule,
+    new ExpressAdapter(server),
+  );
 
   const config = new DocumentBuilder()
     .setTitle('API')
@@ -46,11 +47,10 @@ logger.error('An error occurred while processing the request.')
   app.setViewEngine('ejs');
 
   app.useStaticAssets(path.join(__dirname, '../public/uploads'));
-  app.useGlobalPipes(new ValidationPipe({ transform: true }))
+  app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.enableCors();
   const port = process.env.PORT || 3001;
   await app.listen(port);
-  // await app.init();
 }
 bootstrap();
 

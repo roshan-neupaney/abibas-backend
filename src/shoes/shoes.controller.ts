@@ -159,9 +159,7 @@ export class ShoesController {
         const file = files.shift();
         const image = await uploadImageWithNoSizes(file);
         payload.image_url = image.fileName;
-        console.log('object')
       } else {
-        console.log('string')
         payload.image_url = payload.file;
       }
     }
