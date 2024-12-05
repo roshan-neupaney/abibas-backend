@@ -17,7 +17,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthUser } from 'src/common/decorators/user.decorator';
 import { AuthUserType } from 'src/common/FileType.type';
-import { uploadImageWithSizes } from 'src/common/helper';
+import { uploadImageWithNoSizes } from 'src/common/helper';
 
 @Controller('user')
 @ApiTags('user')
@@ -32,7 +32,7 @@ export class UserController {
   ) {
     let uploadedFile: any;
     if (file) {
-      uploadedFile = await uploadImageWithSizes(file);
+      uploadedFile = await uploadImageWithNoSizes(file);
     }
     if (uploadedFile) {
       createUserDto.image_name = file?.filename;
@@ -64,7 +64,7 @@ export class UserController {
   ) {
     let uploadedFile: any;
     if (file) {
-      uploadedFile = await uploadImageWithSizes(file);
+      uploadedFile = await uploadImageWithNoSizes(file);
     }
     if (uploadedFile) {
       updateUserDto.image_name = file?.filename;

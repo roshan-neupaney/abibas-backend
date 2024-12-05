@@ -9,11 +9,12 @@ import * as express from 'express';
 import { config } from 'dotenv';
 import { v2 as cloudinary } from 'cloudinary';
 
+const server = express();
+
 config({
   path:
-    process.env.NODE_ENV === 'development' ? '.env.development' : '.env.prod',
+    process.env.NODE_ENV === 'development' ? '.env.development' : '.env',
 });
-const server = express();
 
 async function bootstrap() {
   if (process.env.STORAGE === 'cloudinary') {
@@ -24,6 +25,7 @@ async function bootstrap() {
     });
     console.log('Cloudinary configuration has been initialized.');
   }
+  console.log("process.env.STORAGE", process.env.STORAGE)
   const app = await NestFactory.create<NestExpressApplication>(
     AppModule,
     new ExpressAdapter(server),

@@ -13,7 +13,6 @@ if (process.env.STORAGE === 'cloudinary') {
   });
 }
 
-
 export async function uploadToCloudinary(
   buffer: Buffer,
   fileName: string,
@@ -54,6 +53,7 @@ export async function uploadImageWithSizes(
   const fileBuffer = await sharp(file.buffer).toBuffer();
 
   if (process.env.STORAGE === 'cloudinary') {
+    console.log('cloudinary');
     const uploadedFile: ImageType = {
       originalName: file.originalname,
       fileName: fileName,
@@ -70,16 +70,6 @@ export async function uploadImageWithSizes(
       { name: 'small', width: 300 },
     ];
 
-    // const uploadedFile: ImageType = {
-    //   originalName: file.originalname,
-    //   fileName: fileName,
-    //   mimeType: file.mimetype,
-    //   size: file.size,
-    //   url: `${filePath}/${fileName}`,
-    //   path: `${filePath}/${fileName}`,
-    //   sizes: [],
-    // }
-
     for (const size of sizes) {
       const resizedBuffer = await sharp(fileBuffer)
         .resize({ width: size.width })
@@ -88,15 +78,19 @@ export async function uploadImageWithSizes(
         resizedBuffer,
         `${size.name}-${fileName}`,
       );
+      const imageName = result.secure_url.split('/').at(-1);
+      const uniqueString = result.secure_url.split('/').at(-2);
+      console.log('result', uniqueString + '/' + imageName);
       uploadedFile.sizes.push({
         name: size.name,
-        fileName: result.public_id,
+        fileName: uniqueString + '/' + imageName,
         url: result.secure_url,
       });
     }
 
     return uploadedFile;
   } else {
+    console.log('cloudinaryiesssssssssssss', process.env.STORAGE);
     const filePath = path.join(process.cwd(), 'public', 'uploads', 'images');
     const fileBuffer = await sharp(file.buffer).toBuffer();
     const localFileName = `${fileName}`;
@@ -122,15 +116,17 @@ export async function uploadImageWithNoSizes(
   const ext = path.extname(file.originalname);
   const randomNumber1 = Math.floor(Math.random() * (1000000 - 10 + 1)) + 10;
   const randomNumber2 = Math.floor(Math.random() * (1000000 - 10 + 1)) + 10;
-  const fileName = `${randomNumber1}-${randomNumber2}${ext}`;
   const fileBuffer = await sharp(file.buffer).toBuffer();
 
   if (process.env.STORAGE === 'cloudinary') {
+    const fileName = `${randomNumber1}-${randomNumber2}`;
     const result = await uploadToCloudinary(fileBuffer, fileName);
-
+    const imageName = result.secure_url.split('/').at(-1);
+    const uniqueString = result.secure_url.split('/').at(-2);
+    console.log('result', result);
     return {
       originalName: file.originalname,
-      fileName: result.public_id,
+      fileName: uniqueString + '/' + imageName,
       mimeType: file.mimetype,
       size: file.size,
       url: result.secure_url,
@@ -138,9 +134,10 @@ export async function uploadImageWithNoSizes(
       sizes: [],
     };
   } else {
+    const fileName = `${randomNumber1}-${randomNumber2}${ext}`;
     // Local file upload
     const filePath = path.join(process.cwd(), 'public', 'uploads', 'images');
-    
+
     // Ensure the directory exists
     if (!fs.existsSync(filePath)) {
       fs.mkdirSync(filePath, { recursive: true });

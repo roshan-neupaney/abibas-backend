@@ -14,8 +14,7 @@ import { CreateBrandDto } from './dto/create-brand.dto';
 import { UpdateBrandDto } from './dto/update-brand.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { uploadImageWithSizes } from 'src/common/helper';
-import { ImageType } from 'src/common/FileType.type';
+import { uploadImageWithNoSizes } from 'src/common/helper';
 
 @Controller('brand')
 @ApiTags('brand')
@@ -31,7 +30,7 @@ export class BrandController {
     let uploadedFile: any;
     console.log(file);
     if (file) {
-      uploadedFile = await uploadImageWithSizes(file);
+      uploadedFile = await uploadImageWithNoSizes(file);
     }
     if (uploadedFile) {
       createBrandDto.image_name = uploadedFile.fileName;
@@ -62,7 +61,7 @@ export class BrandController {
   ) {
     let uploadedFile: any;
     if (file) {
-      uploadedFile = await uploadImageWithSizes(file);
+      uploadedFile = await uploadImageWithNoSizes(file);
     }
     if (uploadedFile) {
       updateBrandDto.image_name = uploadedFile.fileName;
