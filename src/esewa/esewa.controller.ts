@@ -55,7 +55,6 @@ export class EsewaController {
   async create(
     @Query('data') data: string,
     @Param('id') id: string,
-    @AuthUser() user: AuthUserType,
   ) {
     const decodedString = atob(data);
     const decodedData = JSON.parse(decodedString);
@@ -83,22 +82,5 @@ export class EsewaController {
       result.id,
       result.paymentId,
     );
-  }
-
-  @Public()
-  @Post('test')
-  async test(@Body() payload: any) {
-    const uuid = Math.floor(Math.random() * 10 * Date.now());
-    const product_code = this.config.get<string>('PRODUCT_CODE');
-    const key = this.config.get<string>('SECRET_KEY');
-
-    const message = `total_amount=${payload.total_amount},transaction_uuid=${uuid.toString()},product_code=${product_code}`;
-    var hash = crypto
-      .createHmac('sha256', key)
-      .update(message)
-      .digest('base64');
-    payload.transaction_uuid = uuid.toString();
-    payload.signature = hash;
-    return await this.esewaService.test(payload);
   }
 }

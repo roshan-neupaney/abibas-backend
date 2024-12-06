@@ -25,7 +25,6 @@ async function bootstrap() {
     });
     console.log('Cloudinary configuration has been initialized.');
   }
-  console.log("process.env.STORAGE", process.env.STORAGE)
   const app = await NestFactory.create<NestExpressApplication>(
     AppModule,
     new ExpressAdapter(server),

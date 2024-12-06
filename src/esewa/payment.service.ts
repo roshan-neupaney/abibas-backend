@@ -24,7 +24,11 @@ export class PaymentService {
             where: { id: orderId },
             data: { status: 'COMPLETED' },
             include: {
-              orderItems: true,
+              orderItems: {
+                include: {
+                  shoe: true,
+                }
+              },
             }
         });
         await prisma.payment.update({
@@ -38,6 +42,19 @@ export class PaymentService {
               size: item.size,
             },
           });
+          const shoeRes = await prisma.shoe.findUnique({
+            where: {
+              id: item.shoe_id,
+            }
+          })
+          await prisma.shoe.update({
+            where: {
+              id: shoeRes.id,
+            },
+            data: {
+              sold_amount: shoeRes.sold_amount + item.count, 
+            }
+          })
   
           if (sizeRes) {
             await prisma.size.update({
@@ -46,7 +63,6 @@ export class PaymentService {
                 stock: (Number(sizeRes.stock) - item.count).toString(),
               },
             });
-  
             await prisma.cart.deleteMany({
               where: {
                 color_variation_id: item.color_variation_id,

@@ -43,28 +43,32 @@ export class OrderService {
   findAll() {
     return this.prisma.order.findMany({
       include: {
-        orderItems: true,
-        payment: true
+        orderItems: {
+          include: {
+            shoe: true,
+          },
+        },
+        payment: true,
       },
     });
   }
 
   findOne(id: string) {
     return this.prisma.order.findUnique({
-      where: {id},
+      where: { id },
       include: {
-        orderItems: true
-      }
+        orderItems: true,
+      },
     });
   }
 
   update(id: string, updateOrderDto: UpdateOrderDto) {
     return this.prisma.order.update({
-      where: {id},
+      where: { id },
       data: updateOrderDto as Prisma.OrderUncheckedUpdateInput,
       include: {
-        orderItems: true
-      }
+        orderItems: true,
+      },
     });
   }
 

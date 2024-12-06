@@ -66,7 +66,8 @@ model Shoe {
   previous_price      String   
   description         String
   category_id         String              
-  details             String              
+  details             String        
+  sold_amount         Int?                @default(0)      
   cart                Cart[]
   favorite            Favorite[]     
   status              Status              @default(PENDING)
