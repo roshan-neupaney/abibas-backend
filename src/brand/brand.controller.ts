@@ -28,7 +28,6 @@ export class BrandController {
     @UploadedFile() file?: Express.Multer.File,
   ) {
     let uploadedFile: any;
-    console.log(file);
     if (file) {
       uploadedFile = await uploadImageWithNoSizes(file);
     }

@@ -96,7 +96,6 @@ export class EsewaService {
   }
 
   async test(data: any) {
-    console.log(data);
     try {
       const response = await lastValueFrom(
         this.httpService.post(

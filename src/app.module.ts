@@ -21,6 +21,7 @@ import { InteractionModule } from './interaction/interaction.module';
 import { RatingModule } from './rating/rating.module';
 import { LocationModule } from './location/location.module';
 import { OrderModule } from './order/order.module';
+import { TypesModule } from './types/types.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { OrderModule } from './order/order.module';
     RatingModule,
     LocationModule,
     OrderModule,
+    TypesModule,
   ],
   controllers: [AppController],
   providers: [

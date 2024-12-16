@@ -24,6 +24,11 @@ export class CreateShoeDto {
   price: string;
 
   @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  type: string;
+
+  @ApiProperty()
   previous_price: string;
 
   @ApiProperty()

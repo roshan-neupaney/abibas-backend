@@ -23,7 +23,6 @@ import { AuthUser } from 'src/common/decorators/user.decorator';
 import { uploadImageWithNoSizes } from 'src/common/helper';
 import { AuthUserType } from 'src/common/FileType.type';
 import { Public } from 'src/common/decorators/public.decorator';
-import { CreateColorVariationImagesDto } from './dto/create-colorVariationImages.dto';
 
 @Controller('shoes')
 @UsePipes(ValidationPipe)
@@ -134,7 +133,6 @@ export class ShoesController {
     @Body() createColorVariationImages: any
   ){
     const {variation} = createColorVariationImages;
-    console.log(typeof(createColorVariationImages))
     for(const payload of variation){
       if(typeof(payload.file) !== 'string'){
         const file = files.shift();
@@ -142,9 +140,7 @@ export class ShoesController {
         payload.image_url = image.fileName;
       }
     }
-    console.log(variation)
     return this.shoesService.createColorVariationImages(variation)
-    // console.log(files, images, image)
   }
 
   @Patch('colorVariation/images')
@@ -163,9 +159,7 @@ export class ShoesController {
         payload.image_url = payload.file;
       }
     }
-    console.log(variation)
     return this.shoesService.updateColorVariationImages(variation)
-    // console.log(files, images, image)
   }
 
   @Delete('colorVariation/images/:id')

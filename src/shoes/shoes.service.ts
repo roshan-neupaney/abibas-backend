@@ -28,6 +28,7 @@ export class ShoesService {
             slug_url: slug_url,
             brand_id: createShoeDto.brand_id,
             category_id: createShoeDto.category_id,
+            type: createShoeDto.type,
             price: createShoeDto.price,
             previous_price: createShoeDto.previous_price,
             description: createShoeDto.description,
@@ -164,6 +165,7 @@ export class ShoesService {
           title: updateShoeDto.title,
           brand_id: updateShoeDto.brand_id,
           price: updateShoeDto.price,
+          type: updateShoeDto.type,
           previous_price: updateShoeDto.previous_price,
           description: updateShoeDto.description,
           category_id: updateShoeDto.category_id,
@@ -279,7 +281,6 @@ export class ShoesService {
   async createCart(createCartDto: CreateCartDto) {
     return await this.prisma.$transaction(async (prisma) => {
       const { user_id, shoe_id, size, color_variation_id } = createCartDto;
-      // console.log(user_id)
       const existingProduct = await prisma.cart.findFirst({
         where: {
           user_id,

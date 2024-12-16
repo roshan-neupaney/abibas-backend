@@ -53,7 +53,6 @@ export async function uploadImageWithSizes(
   const fileBuffer = await sharp(file.buffer).toBuffer();
 
   if (process.env.STORAGE === 'cloudinary') {
-    console.log('cloudinary');
     const uploadedFile: ImageType = {
       originalName: file.originalname,
       fileName: fileName,
@@ -80,7 +79,6 @@ export async function uploadImageWithSizes(
       );
       const imageName = result.secure_url.split('/').at(-1);
       const uniqueString = result.secure_url.split('/').at(-2);
-      console.log('result', uniqueString + '/' + imageName);
       uploadedFile.sizes.push({
         name: size.name,
         fileName: uniqueString + '/' + imageName,
@@ -90,7 +88,6 @@ export async function uploadImageWithSizes(
 
     return uploadedFile;
   } else {
-    console.log('cloudinaryiesssssssssssss', process.env.STORAGE);
     const filePath = path.join(process.cwd(), 'public', 'uploads', 'images');
     const fileBuffer = await sharp(file.buffer).toBuffer();
     const localFileName = `${fileName}`;
@@ -123,7 +120,6 @@ export async function uploadImageWithNoSizes(
     const result = await uploadToCloudinary(fileBuffer, fileName);
     const imageName = result.secure_url.split('/').at(-1);
     const uniqueString = result.secure_url.split('/').at(-2);
-    console.log('result', result);
     return {
       originalName: file.originalname,
       fileName: uniqueString + '/' + imageName,
