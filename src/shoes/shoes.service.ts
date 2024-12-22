@@ -2,13 +2,12 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateShoeDto } from './dto/create-shoe.dto';
 import { UpdateShoeDto } from './dto/update-shoe.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ShoesType } from './shoes.types';
+import { QueryTypes } from './shoes.types';
 import { join } from 'path';
 import { unlink } from 'fs';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { VariationDto } from './dto/create-variation.dto';
 import { SizeDto } from './dto/create-size.dto';
-import { CreateColorVariationImagesDto } from './dto/create-colorVariationImages.dto';
 import { v2 as cloudinary } from 'cloudinary';
 
 @Injectable()
@@ -63,25 +62,37 @@ export class ShoesService {
     }
   }
 
-  async findAll(query: ShoesType) {
-    const { category, price_min, price_max, color } = query;
-    const colorArray = color ? color.split(',') : [];
+  async findAll(query: QueryTypes) {
+    const { categories, price_min, price_max, colors, brands, sortBy } = query;
+    const colorsArray = colors ? colors.toLowerCase().split(',') : [];
+    const categoriesArray = categories ? categories.split('|') : [];
+    const brandsArray = brands ? brands.split(',') : [];
+
     const shoeList = await this.prisma.shoe.findMany({
       where: {
-        category: {
-          title: {
-            contains: category,
+        ...(categoriesArray?.length > 0 && {
+          category: {
+            title: {
+              in: categoriesArray,
+            },
           },
-        },
+        }),
+        ...(brands?.length > 0 && {
+          brand: {
+            title: {
+              in: brandsArray,
+            },
+          },
+        }),
         price: {
           gte: price_min,
           lte: price_max,
         },
-        ...(colorArray.length > 0 && {
+        ...(colorsArray?.length > 0 && {
           colorVariation: {
             some: {
               color: {
-                hasSome: colorArray,
+                hasSome: colorsArray,
               },
             },
           },
@@ -101,9 +112,16 @@ export class ShoesService {
         brand: true,
         rating: true,
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy:
+        sortBy === 'newest'
+          ? { createdAt: 'desc' }
+          : sortBy === 'price_low_to_high'
+            ? { price: 'asc' }
+            : sortBy === 'price_high_to_low'
+              ? { price: 'desc' }
+              : sortBy === 'top_sellers'
+                ? { sold_amount: 'desc' }
+                : {},
     });
     return shoeList;
   }
@@ -203,7 +221,7 @@ export class ShoesService {
                   'images',
                   existingImage.image_url,
                 );
-        
+
                 unlink(existingImagePath, (error) => {
                   if (error) return 'Error while updating shoe';
                 });

@@ -3,6 +3,7 @@ import { ColorService } from './color.service';
 import { CreateColorDto } from './dto/create-color.dto';
 import { UpdateColorDto } from './dto/update-color.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @Controller('color')
 @ApiTags('color')
@@ -15,11 +16,13 @@ export class ColorController {
   }
 
   @Get()
+  @Public()
   findAll() {
     return this.colorService.findAll();
   }
 
   @Get('active')
+  @Public()
   findAllActive() {
     return this.colorService.findAllActive();
   }

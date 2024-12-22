@@ -15,6 +15,7 @@ import { UpdateBrandDto } from './dto/update-brand.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { uploadImageWithNoSizes } from 'src/common/helper';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @Controller('brand')
 @ApiTags('brand')
@@ -38,15 +39,18 @@ export class BrandController {
   }
 
   @Get()
+  @Public()
   findAll() {
     return this.brandService.findAll();
   }
   @Get('/active')
+  @Public()
   findAllActive() {
     return this.brandService.findAllActive();
   }
 
   @Get(':id')
+  @Public()
   findOne(@Param('id') id: string) {
     return this.brandService.findOne(id);
   }

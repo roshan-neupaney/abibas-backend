@@ -17,7 +17,7 @@ import { CreateShoeDto } from './dto/create-shoe.dto';
 import { UpdateShoeDto } from './dto/update-shoe.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
-import { ShoesType } from './shoes.types';
+import { QueryTypes } from './shoes.types';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { AuthUser } from 'src/common/decorators/user.decorator';
 import { uploadImageWithNoSizes } from 'src/common/helper';
@@ -52,7 +52,7 @@ export class ShoesController {
 
   @Get()
   @Public()
-  findAll(@Query() query: ShoesType) {
+  findAll(@Query() query: QueryTypes) {
     return this.shoesService.findAll(query);
   }
 

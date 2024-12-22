@@ -1,6 +1,8 @@
-export type ShoesType = {
-    category: string;
+export type QueryTypes = {
+    categories: string;
     price_min: string;
     price_max: string;
-    color: string;
+    colors: string;
+    brands: string;
+    sortBy: string;
 }
