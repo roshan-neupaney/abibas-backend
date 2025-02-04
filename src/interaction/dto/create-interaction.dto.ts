@@ -20,4 +20,6 @@ export class CreateInteractionDto {
     @IsNumber()
     interaction_score: number
 
+    rate?: number;
+
 }

@@ -37,6 +37,8 @@ model Interaction {
   shoe_id             String
   action_type         String
   interaction_score   Float
+  rate                Int?
+  isActive            Boolean             @default(true)
   shoe                Shoe                @relation(fields: [shoe_id], references: [id])
   user                MyUsers             @relation(fields: [user_id], references: [id])
   createdAt           DateTime            @default(now()) @map("created_at")
@@ -70,7 +72,7 @@ model Shoe {
   details             String        
   sold_amount         Int?                @default(0)      
   cart                Cart[]
-  favorite            Favorite[]     
+  favorite            Favorite[]    
   status              Status              @default(PENDING)
   colorVariation      ColorVariation[]
   category            Category            @relation(fields:[category_id], references:[id])
@@ -110,7 +112,8 @@ model ColorVariation {
 model ColorVariationImages {
   id                      String                    @id @default(uuid())
   image_url               String 
-  color_variation_id      String
+  color_variation_id      String                   
+  order                   Int                       @default(1)
   colorVariation          ColorVariation            @relation(fields:[color_variation_id], references:[id], onDelete: Cascade)             
   createdAt               DateTime                  @default(now()) @map("created_at")
   updatedAt               DateTime                  @updatedAt
@@ -197,7 +200,7 @@ model Order {
   user                MyUsers             @relation(fields:[user_id], references:[id])        
   status              OrderStatus         @default(PENDING)
   shipping_status     ShippingStatus      @default(PENDING)
-  payment             Payment?   
+  payment             Payment[]  
   orderItems          OrderItems[]
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
@@ -235,7 +238,7 @@ enum ShippingStatus {
 
 model Payment {
   id                  String              @id @default(uuid())
-  order_id            String              @unique
+  order_id            String              
   amount              String
   status              PaymentStatus       @default(PENDING)
   createdAt           DateTime            @default(now())

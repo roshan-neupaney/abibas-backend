@@ -20,7 +20,11 @@ import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { QueryTypes } from './shoes.types';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { AuthUser } from 'src/common/decorators/user.decorator';
-import { uploadImageWithNoSizes } from 'src/common/helper';
+import {
+  updateMultipleImages,
+  uploadImageWithNoSizes,
+  uploadMultipleImages,
+} from 'src/common/helper';
 import { AuthUserType } from 'src/common/FileType.type';
 import { Public } from 'src/common/decorators/public.decorator';
 
@@ -52,8 +56,8 @@ export class ShoesController {
 
   @Get()
   @Public()
-  findAll(@Query() query: QueryTypes) {
-    return this.shoesService.findAll(query);
+  findAll(@Query() query: QueryTypes, @AuthUser() user: AuthUserType) {
+    return this.shoesService.findAll(query, user.sub);
   }
 
   @Get(':id')
@@ -98,7 +102,10 @@ export class ShoesController {
 
   @Post('user/cart/changeQuantity')
   @Public()
-  changeCartProductQuantity(@Body("quantity") quantity: number, @Body("id") id: string) {
+  changeCartProductQuantity(
+    @Body('quantity') quantity: number,
+    @Body('id') id: string,
+  ) {
     return this.shoesService.changeCartProductQuantity(id, quantity);
   }
 
@@ -130,36 +137,37 @@ export class ShoesController {
   @UseInterceptors(AnyFilesInterceptor())
   async createColorVariationImages(
     @UploadedFiles() files: Express.Multer.File[],
-    @Body() createColorVariationImages: any
-  ){
-    const {variation} = createColorVariationImages;
-    for(const payload of variation){
-      if(typeof(payload.file) !== 'string'){
-        const file = files.shift();
-        const image = await uploadImageWithNoSizes(file);
-        payload.image_url = image.fileName;
-      }
-    }
-    return this.shoesService.createColorVariationImages(variation)
+    @Body() body: any,
+  ) {
+    const result = await uploadMultipleImages(files, body.images);
+    const payload = {
+      color_variation_id: body.color_variation_id,
+      images: result,
+    };
+    return this.shoesService.createColorVariationImages(payload);
   }
 
   @Patch('colorVariation/images')
   @UseInterceptors(AnyFilesInterceptor())
   async updateColorVariationImages(
     @UploadedFiles() files: Express.Multer.File[],
-    @Body() updateColorVariationImages: any
-  ){
-    const {variation} = updateColorVariationImages;
-    for(const payload of variation){
-      if(typeof(payload.file) !== 'string'){
-        const file = files.shift();
-        const image = await uploadImageWithNoSizes(file);
-        payload.image_url = image.fileName;
-      } else {
-        payload.image_url = payload.file;
+    @Body() body: any,
+  ) {
+    const newOrderList = body.images.filter(items => !items.file);
+    const oldImages = body.images.filter(items => items.id)
+    const images = await updateMultipleImages(files, newOrderList);
+    const updateBody = oldImages.map((img) => {
+      if (!img.file && img.id) {
+        return { ...img, file: images.shift().file };
+      } else if(img.file){
+        return img;
       }
-    }
-    return this.shoesService.updateColorVariationImages(variation)
+    });
+    const payload = {
+      color_variation_id: body.color_variation_id,
+      images: [...images, ...updateBody],
+    };
+    return this.shoesService.updateColorVariationImages(payload);
   }
 
   @Delete('colorVariation/images/:id')

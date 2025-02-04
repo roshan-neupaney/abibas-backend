@@ -4,15 +4,11 @@ import {
   Param,
   Render,
   Query,
-  Post,
-  Body,
 } from '@nestjs/common';
 import { EsewaService } from './esewa.service';
 import * as crypto from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { Public } from 'src/common/decorators/public.decorator';
-import { AuthUser } from 'src/common/decorators/user.decorator';
-import { AuthUserType } from 'src/common/FileType.type';
 import { PaymentService } from './payment.service';
 import { ApiTags } from '@nestjs/swagger';
 
@@ -25,30 +21,30 @@ export class EsewaController {
     private paymentService: PaymentService,
   ) {}
 
-  @Get('payment/:id')
-  @Public()
-  @Render('esewaPayment')
-  async findPaymentPage(@Param('id') id: string) {
-    const uuid = Math.floor(Math.random() * 10 * Date.now());
-    const product_code = this.config.get<string>('PRODUCT_CODE');
-    const key = this.config.get<string>('SECRET_KEY');
+  // @Get('payment/:id')
+  // @Public()
+  // @Render('esewaPayment')
+  // async findPaymentPage(@Param('id') id: string) {
+  //   const uuid = Math.floor(Math.random() * 10 * Date.now());
+  //   const product_code = this.config.get<string>('PRODUCT_CODE');
+  //   const key = this.config.get<string>('SECRET_KEY');
 
-    const response = await this.esewaService.findProduct(id);
+  //   const response = await this.esewaService.findProduct(id);
 
-    const message = `total_amount=${response.price},transaction_uuid=${uuid},product_code=${product_code}`;
-    var hash = crypto
-      .createHmac('sha256', key)
-      .update(message)
-      .digest('base64');
-    const product = {
-      ...response,
-      transaction_uuid: uuid,
-      signature: hash,
-      product_code,
-      id,
-    };
-    return { product };
-  }
+  //   const message = `total_amount=${response.price},transaction_uuid=${uuid},product_code=${product_code}`;
+  //   var hash = crypto
+  //     .createHmac('sha256', key)
+  //     .update(message)
+  //     .digest('base64');
+  //   const product = {
+  //     ...response,
+  //     transaction_uuid: uuid,
+  //     signature: hash,
+  //     product_code,
+  //     id,
+  //   };
+  //   return { product };
+  // }
 
   @Public()
   @Get('initialpayment/:id')

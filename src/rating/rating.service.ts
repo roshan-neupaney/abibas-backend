@@ -7,7 +7,19 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class RatingService {
   constructor(private prisma: PrismaService) {}
   async create(createRatingDto: CreateRatingDto) {
-    return await this.prisma.rating.create({ data: createRatingDto });
+    const result = this.prisma.$transaction(async(prisma) => {
+      await prisma.interaction.create({
+        data: {
+          shoe_id: createRatingDto.shoe_id,
+          user_id: createRatingDto.user_id,
+          interaction_score: createRatingDto.rate,
+          action_type: 'rating',
+          rate: createRatingDto.rate,
+        },
+      });
+      return await prisma.rating.create({ data: createRatingDto });
+    })
+    return result;
   }
 
   findAll() {

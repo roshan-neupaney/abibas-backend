@@ -153,3 +153,56 @@ export async function uploadImageWithNoSizes(
     };
   }
 }
+
+export async function uploadMultipleImages(files, body) {
+  try {
+    const uploads = files.map(async (file) => {
+      const order = body.shift().order;
+      const fileBuffer = await sharp(file.buffer).toBuffer();
+      const randomNumber1 = Math.floor(Math.random() * (1000000 - 10 + 1)) + 10;
+      const randomNumber2 = Math.floor(Math.random() * (1000000 - 10 + 1)) + 10;
+      const fileName = `${randomNumber1}-${randomNumber2}-${order}`;
+
+      return uploadToCloudinary(fileBuffer, fileName); // Ensure this function uploads efficiently
+    });
+
+    const results = await Promise.all(uploads);
+    const temp = results.map((items) => {
+      const imageName = items.secure_url.split('/').at(-1);
+      const uniqueString = items.secure_url.split('/').at(-2);
+      const order = imageName.split('.')[0].split('-').at(-1);
+      return { image_url: uniqueString + '/' + imageName, order: Number(order) };
+    });
+
+    return temp; // Contains details of all uploaded images
+  } catch (error) {
+    console.error('Error uploading images:', error);
+    throw new Error('Image upload failed');
+  }
+}
+
+export async function updateMultipleImages(files, newOrderList) {
+  try {
+    const uploads = files.map(async (file) => {
+      const order = newOrderList.shift().order;
+      const fileBuffer = await sharp(file.buffer).toBuffer();
+      const randomNumber1 = Math.floor(Math.random() * (1000000 - 10 + 1)) + 10;
+      const randomNumber2 = Math.floor(Math.random() * (1000000 - 10 + 1)) + 10;
+      const fileName = `${randomNumber1}-${randomNumber2}-${order}`;
+
+      return uploadToCloudinary(fileBuffer, fileName); // Ensure this function uploads efficiently
+    });
+    const results = await Promise.all(uploads);
+    const temp = results.map((items) => {
+      const imageName = items.secure_url?.split('/')?.at(-1);
+      const uniqueString = items.secure_url?.split('/')?.at(-2);
+      const order = imageName.split('.')[0].split('-').at(-1);
+      return { file: uniqueString + '/' + imageName, order: Number(order) };
+    });
+
+    return temp; // Contains details of all uploaded images
+  } catch (error) {
+    console.error('Error uploading images:', error);
+    throw new Error('Image upload failed');
+  }
+}

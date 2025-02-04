@@ -15,60 +15,72 @@ export class ShoesService {
   constructor(private prisma: PrismaService) {}
   async create(createShoeDto: CreateShoeDto, colorVariation: any) {
     try {
-      const result = await this.prisma.$transaction(async (prisma) => {
-        delete createShoeDto['color_variation'];
-        const slug_url =
-          createShoeDto.title.replaceAll(' ', '_') +
-          '_' +
-          Math.floor(Math.random() * Date.now() * 0.0001).toString();
-        const shoeResponse = await prisma.shoe.create({
+      // const result = await this.prisma.$transaction(async (prisma) => {
+      delete createShoeDto['color_variation'];
+      const slug_url =
+        createShoeDto.title.replaceAll(' ', '_') +
+        '_' +
+        Math.floor(Math.random() * Date.now() * 0.0001).toString();
+      const shoeResponse = await this.prisma.shoe.create({
+        data: {
+          title: createShoeDto.title,
+          slug_url: slug_url,
+          brand_id: createShoeDto.brand_id,
+          category_id: createShoeDto.category_id,
+          type: createShoeDto.type,
+          price: createShoeDto.price,
+          previous_price: createShoeDto.previous_price,
+          description: createShoeDto.description,
+          details: createShoeDto.details,
+          status: createShoeDto.status,
+        },
+      });
+
+      for (const cv of colorVariation) {
+        const cvResponse = await this.prisma.colorVariation.create({
           data: {
-            title: createShoeDto.title,
-            slug_url: slug_url,
-            brand_id: createShoeDto.brand_id,
-            category_id: createShoeDto.category_id,
-            type: createShoeDto.type,
-            price: createShoeDto.price,
-            previous_price: createShoeDto.previous_price,
-            description: createShoeDto.description,
-            details: createShoeDto.details,
-            status: createShoeDto.status,
+            color: JSON.parse(cv.color),
+            image_url: cv.image_url,
+            shoe_id: shoeResponse.id,
           },
         });
-
-        for (const cv of colorVariation) {
-          const cvResponse = await prisma.colorVariation.create({
+        for (const s of cv.sizes) {
+          await this.prisma.size.create({
             data: {
-              color: JSON.parse(cv.color),
-              image_url: cv.image_url,
-              shoe_id: shoeResponse.id,
+              size: s.size,
+              stock: s.stock,
+              color_variation_id: cvResponse.id,
             },
           });
-          for (const s of cv.sizes) {
-            await prisma.size.create({
-              data: {
-                size: s.size,
-                stock: s.stock,
-                color_variation_id: cvResponse.id,
-              },
-            });
-          }
         }
-        return shoeResponse;
-      });
-      return result;
+      }
+      return shoeResponse;
+      // });
+      // return result;
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
-  async findAll(query: QueryTypes) {
-    const { categories, price_min, price_max, colors, brands, sortBy } = query;
+  async findAll(query: QueryTypes, user_id: string) {
+    const {
+      categories,
+      price_min,
+      price_max,
+      colors,
+      brands,
+      sortBy,
+      page,
+      pageSize,
+    } = query;
     const colorsArray = colors ? colors.toLowerCase().split(',') : [];
     const categoriesArray = categories ? categories.split('|') : [];
     const brandsArray = brands ? brands.split(',') : [];
+    const skip = (page - 1) * pageSize || 0;
 
     const shoeList = await this.prisma.shoe.findMany({
+      skip,
+      take: pageSize,
       where: {
         ...(categoriesArray?.length > 0 && {
           category: {
@@ -104,13 +116,18 @@ export class ShoesService {
           include: {
             colorVariationImages: {
               orderBy: {
-                createdAt: 'desc',
+                order: 'asc',
               },
             },
           },
         },
         brand: true,
         rating: true,
+        favorite: {
+          where: {
+            user_id,
+          },
+        },
       },
       orderBy:
         sortBy === 'newest'
@@ -146,7 +163,7 @@ export class ShoesService {
               sizes: true,
               colorVariationImages: {
                 orderBy: {
-                  createdAt: 'asc',
+                  order: 'asc',
                 },
               },
             },
@@ -317,7 +334,7 @@ export class ShoesService {
           },
         });
       } else {
-        return await prisma.cart.create({
+        const cart = await prisma.cart.create({
           data: {
             shoe_id,
             size,
@@ -325,6 +342,15 @@ export class ShoesService {
             user_id,
           },
         });
+        await prisma.interaction.create({
+          data: {
+            shoe_id,
+            user_id,
+            interaction_score: 4,
+            action_type: 'addToCart',
+          },
+        });
+        return cart;
       }
     });
   }
@@ -392,27 +418,63 @@ export class ShoesService {
   }
 
   async deleteCart(id: string) {
-    return await this.prisma.cart.delete({ where: { id } });
+    return await this.prisma.$transaction(async (prisma) => {
+      const cart = await prisma.cart.delete({ where: { id } });
+      await prisma.interaction.updateMany({
+        where: {
+          shoe_id: cart.shoe_id,
+          user_id: cart.user_id,
+          action_type: 'addToCart',
+        },
+        data: {
+          isActive: false,
+        },
+      });
+    });
   }
 
   async createFavorites(shoe_id: string, user_id: string) {
-    const existingFavorite = await this.prisma.favorite.findFirst({
-      where: { shoe_id, user_id },
+    const result = this.prisma.$transaction(async (prisma) => {
+      const existingFavorite = await prisma.favorite.findFirst({
+        where: { shoe_id, user_id },
+      });
+      if (existingFavorite) {
+        const fav = await prisma.favorite.delete({
+          where: {
+            id: existingFavorite.id,
+          },
+        });
+        await prisma.interaction.updateMany({
+          where: {
+            shoe_id,
+            user_id,
+            action_type: 'favorite',
+            isActive: true,
+          },
+          data: {
+            isActive: false,
+          },
+        });
+        return fav;
+      } else {
+        const fav = await prisma.favorite.create({
+          data: {
+            shoe_id,
+            user_id,
+          },
+        });
+        await prisma.interaction.create({
+          data: {
+            shoe_id,
+            user_id,
+            interaction_score: 3,
+            action_type: 'favorite',
+          },
+        });
+        return fav;
+      }
     });
-    if (existingFavorite) {
-      return await this.prisma.favorite.delete({
-        where: {
-          id: existingFavorite.id,
-        },
-      });
-    } else {
-      return await this.prisma.favorite.create({
-        data: {
-          shoe_id,
-          user_id,
-        },
-      });
-    }
+    return result;
   }
   async findAllFavorites(userId: string) {
     return await this.prisma.favorite.findMany({
@@ -427,15 +489,13 @@ export class ShoesService {
   }
 
   async createColorVariationImages(createColorVariationImages: any) {
-    const delay = (ms: number) =>
-      new Promise((resolve) => setTimeout(resolve, ms));
     const result = await Promise.all(
-      createColorVariationImages.map(async (variation, index: number) => {
-        await delay(index * 5);
+      createColorVariationImages.images.map(async (img) => {
         return await this.prisma.colorVariationImages.create({
           data: {
-            color_variation_id: variation.color_variation_id,
-            image_url: variation.image_url,
+            color_variation_id: createColorVariationImages.color_variation_id,
+            image_url: img.image_url,
+            order: img.order,
           },
         });
       }),
@@ -445,18 +505,17 @@ export class ShoesService {
 
   async updateColorVariationImages(updateColorVariationImages: any) {
     const result = await Promise.all(
-      updateColorVariationImages.map(async (variation) => {
-        if (variation.id) {
+      updateColorVariationImages.images.map(async (img) => {
+        if (img?.id) {
           const existingImage =
             await this.prisma.colorVariationImages.findUnique({
-              where: { id: variation.id },
+              where: { id: img.id },
             });
-          if (
-            existingImage &&
-            !(existingImage.image_url === variation.image_url)
-          ) {
+          if (existingImage && !(existingImage.image_url === img.file)) {
             if (process.env.STORAGE == 'cloudinary') {
-              const publicId = existingImage.image_url;
+              const publicId = existingImage.image_url
+                ?.split('/')[1]
+                ?.split('.')[0];
               const result = await cloudinary.uploader.destroy(publicId);
               if (result.result !== 'ok') {
                 throw new Error('Error deleting image from Cloudinary');
@@ -475,18 +534,20 @@ export class ShoesService {
           }
           return await this.prisma.colorVariationImages.update({
             where: {
-              id: variation.id,
+              id: img.id,
             },
             data: {
-              color_variation_id: variation.color_variation_id,
-              image_url: variation.image_url,
+              color_variation_id: img.color_variation_id,
+              image_url: img.file,
+              order: Number(img.order),
             },
           });
         } else {
           return await this.prisma.colorVariationImages.create({
             data: {
-              color_variation_id: variation.color_variation_id,
-              image_url: variation.image_url,
+              color_variation_id: updateColorVariationImages.color_variation_id,
+              image_url: img.file,
+              order: Number(img.order),
             },
           });
         }
@@ -501,7 +562,9 @@ export class ShoesService {
     });
     if (existingImage) {
       if (process.env.STORAGE == 'cloudinary') {
-        const publicId = existingImage.image_url;
+        const publicId =
+          existingImage.image_url?.split('/')[1]?.split('.')[0] ||
+          existingImage.image_url;
         const result = await cloudinary.uploader.destroy(publicId);
         if (result.result !== 'ok') {
           throw new Error('Error deleting image from Cloudinary');

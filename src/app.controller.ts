@@ -4,10 +4,10 @@ import { Public } from './common/decorators/public.decorator';
 
 @Controller()
 export class AppController {
-
+  constructor(private appService: AppService){}
   @Get()
   @Public()
-  getHello(): string {
-    return 'hello all';
+  async getHello() {
+    return await this.appService.getHello();
   }
 }
