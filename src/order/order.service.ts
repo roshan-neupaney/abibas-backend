@@ -46,6 +46,7 @@ export class OrderService {
         orderItems: {
           include: {
             shoe: true,
+            colorVariation: true,
           },
         },
         payment: true,

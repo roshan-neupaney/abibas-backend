@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateInteractionDto } from './dto/create-interaction.dto';
 import { UpdateInteractionDto } from './dto/update-interaction.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import axios from 'axios';
 
 @Injectable()
 export class InteractionService {
@@ -11,45 +12,72 @@ export class InteractionService {
   }
 
   async findAll() {
-    const interactions = await this.prisma.interaction.findMany({
-      include: {
-        shoe: {
-          include: {
-            brand: true,
-            category: true,
-            rating: true,
+    const interactions = await this.prisma.interaction.findMany();
+    return interactions;
+  }
+
+  async findHybridRecommendation(user_id: string, shoe_id: string) {
+    const idShoe = await this.prisma.shoe.findUnique({
+      where: { slug_url: shoe_id },
+      select: { id: true },
+    });
+    const { data } = await axios.get(
+      `http://localhost:5000/recommend?user_id=${user_id}&shoe_id=${idShoe.id}`,
+    );
+    const { recommended_shoes } = data;
+    const shoes = await this.prisma.shoe.findMany({
+      where: {
+        id: {
+          in: recommended_shoes,
+        },
+      },
+      select: {
+        id: true,
+        title: true,
+        slug_url: true,
+        category: {
+          select: {
+            id: true,
+            title: true,
           },
         },
-        user: true,
-        
+        colorVariation: true,
+        type: true,
+        price: true,
       },
     });
-    const totalCount = await this.prisma.interaction.count();
-    const filteredResult = interactions.map((items) => {
-      let sum = items.shoe.rating.reduce((acc, curr) => acc + curr.rate, 0);
-      let average = sum / items.shoe.rating.length || null;
-      return {
-        user_id: items.user_id,
-        shoe_id: items.shoe_id,
-        shoe_title: items.shoe.title,
-        shoe_slug_url: items.shoe.slug_url,
-        shoe_sold_amount: items.shoe.sold_amount,
-        shoe_brand: items.shoe.brand.title,
-        shoe_price: items.shoe.price,
-        shoe_type: items.shoe.type,
-        shoe_description: items.shoe.description,
-        shoe_details: items.shoe.details,
-        shoe_category: items.shoe.category.title,
-        action_type: items.action_type,
-        interaction_score: items.interaction_score,
-        interaction_rate: items.rate,
-        isActive: items.isActive,
-        total_rating: average,
-        createdAt: items.createdAt,
-        totalCount,
-      };
+    return shoes;
+  }
+
+  async findCollaborativeRecommendation(user_id: string) {
+    const { data } = await axios.get(
+      `http://localhost:5000/collaborative-recommend?user_id=${user_id}`,
+    );
+    const { recommended_shoes } = data;
+    console.log(recommended_shoes);
+    const shoes = await this.prisma.shoe.findMany({
+      where: {
+        id: {
+          in: recommended_shoes,
+        },
+      },
+      select: {
+        id: true,
+        title: true,
+        slug_url: true,
+        category: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+        colorVariation: true,
+        type: true,
+        price: true,
+      },
     });
-    return filteredResult;
+    console.log(recommended_shoes);
+    return shoes;
   }
 
   findOne(id: number) {
@@ -63,4 +91,58 @@ export class InteractionService {
   remove(id: number) {
     return `This action removes a #${id} interaction`;
   }
+
+
+  // async transferAll() {
+  //   try {
+  //     const { data: interactions } = await axios.get('https://abibas-backend-1.vercel.app/interaction');
+  
+  //     for (const interaction of interactions) {
+  //       await this.prisma.interaction.create({
+  //         data: {
+  //           user_id: interaction.user_id,
+  //           shoe_id: interaction.shoe_id,
+  //           action_type: interaction.action_type,
+  //           rate: interaction.rate,
+  //           interaction_score: interaction.interaction_score,
+  //           isActive: interaction.isActive,
+  //           createdAt: interaction.create_at,
+  //           updatedAt: interaction.updated_at
+  //         },
+  //       });
+  //     }
+  
+  //     console.log('Data stored successfully in local DB');
+  //     return 'Data stored successfully in local DB';
+  //   } catch (error) {
+  //     console.error('Error fetching interactions:', error);
+  //   }
+  // }
+  // async transferAllUsers() {
+  //   try {
+  //     const { data: interactions } = await axios.get('https://abibas-backend-1.vercel.app/user');
+      
+  //     for (const interaction of interactions) {
+  //       await this.prisma.myUsers.create({
+  //         data: {
+  //           hash: interaction.hash,
+  //           hashedRt: interaction.hashedRt,
+  //           email: interaction.email,
+  //           firstName: interaction.firstName,
+  //           lastName: interaction.lastName,
+  //           mobile: interaction.mobile,
+  //           status: interaction.status,
+  //           role: interaction.role,
+  //           createdAt: interaction.createAt,
+  //           updatedAt: interaction.updatedAt
+  //         },
+  //       });
+  //     }
+  
+  //     console.log('Data stored successfully in local DB');
+  //     return interactions;
+  //   } catch (error) {
+  //     console.error('Error fetching interactions:', error);
+  //   }
+  // }
 }

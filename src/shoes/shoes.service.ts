@@ -72,6 +72,7 @@ export class ShoesService {
       sortBy,
       page,
       pageSize,
+      search
     } = query;
     const colorsArray = colors ? colors.toLowerCase().split(',') : [];
     const categoriesArray = categories ? categories.split('|') : [];
@@ -82,6 +83,13 @@ export class ShoesService {
       skip,
       take: pageSize,
       where: {
+        ...(search && {
+          OR: [
+            { title: { contains: search, mode: "insensitive" } },
+            { category: { title: { contains: search, mode: "insensitive" } } },
+            { brand: { title: { contains: search, mode: "insensitive" } } }
+          ],
+        }),
         ...(categoriesArray?.length > 0 && {
           category: {
             title: {
@@ -141,7 +149,7 @@ export class ShoesService {
                 : {},
     });
     return shoeList;
-  }
+  } 
 
   async findOne(id: string, user_id: string) {
     const result = await this.prisma.$transaction(async (prisma) => {

@@ -13,4 +13,6 @@ export class QueryTypes {
 
     @Type(() => Number)
     pageSize: number;
+
+    search: string;
 }

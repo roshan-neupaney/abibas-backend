@@ -18,12 +18,14 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthUser } from 'src/common/decorators/user.decorator';
 import { AuthUserType } from 'src/common/FileType.type';
 import { uploadImageWithNoSizes } from 'src/common/helper';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @Controller('user')
 @ApiTags('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @Public()
   @Post()
   @UseInterceptors(FileInterceptor('file'))
   async create(
@@ -40,6 +42,7 @@ export class UserController {
     return this.userService.create(createUserDto);
   }
 
+  @Public()
   @Get()
   findAll() {
     return this.userService.findAll();

@@ -25,7 +25,6 @@ model MyUsers {
   image_name          String?
   cart                Cart[]
   order               Order[]
-  interaction         Interaction[]
   rating              Rating[]
   review              Review[]
   @@map("myUsers")
@@ -39,8 +38,6 @@ model Interaction {
   interaction_score   Float
   rate                Int?
   isActive            Boolean             @default(true)
-  shoe                Shoe                @relation(fields: [shoe_id], references: [id])
-  user                MyUsers             @relation(fields: [user_id], references: [id])
   createdAt           DateTime            @default(now()) @map("created_at")
   updatedAt           DateTime            @updatedAt
 }
@@ -77,7 +74,6 @@ model Shoe {
   colorVariation      ColorVariation[]
   category            Category            @relation(fields:[category_id], references:[id])
   brand               Brand               @relation(fields:[brand_id], references:[id])
-  interaction         Interaction[]
   rating              Rating[]
   review              Review[]
   orderItems          OrderItems[]

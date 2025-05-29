@@ -33,6 +33,7 @@ export class UserService {
           role: true,
           status: true,
           image_name: true,
+          hash: true,
         },
       });
     } catch (error) {
@@ -58,6 +59,8 @@ export class UserService {
         role: true,
         status: true,
         image_name: true,
+        hash: true,
+        hashedRt: true,
       },
     });
     return user;

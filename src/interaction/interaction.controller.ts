@@ -24,6 +24,29 @@ export class InteractionController {
   findAll() {
     return this.interactionService.findAll();
   }
+  // @Get('/transfer')
+  // @Public()
+  // transferAll() {
+  //   return this.interactionService.transferAll();
+  // }
+  // @Get('/transfer-user')
+  // @Public()
+  // transferAllUser() {
+  //   return this.interactionService.transferAllUsers();
+  // }
+
+  @Get('/hybrid-recomendation/:shoe_id')
+  @Public()
+  findHybridRecommendation(@Param('shoe_id') shoe_id: string, @AuthUser() user: AuthUserType) {
+    const user_id = user.sub;
+    return this.interactionService.findHybridRecommendation(user_id, shoe_id);
+  }
+  @Get('/collborative-recomendation')
+  @Public()
+  findCollaborativeRecomnendation(@AuthUser() user: AuthUserType) {
+    const user_id = user.sub;
+    return this.interactionService.findCollaborativeRecommendation(user_id);
+  }
 
   @Get(':id')
   @Public()
