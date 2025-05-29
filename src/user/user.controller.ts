@@ -58,10 +58,10 @@ export class UserController {
     return this.userService.findUserDetail(user.sub);
   }
 
-  @Patch(':id')
+  @Patch('edit')
   @UseInterceptors(FileInterceptor('file'))
   async update(
-    @Param('id') id: string,
+    @AuthUser() user:AuthUserType,
     @Body() updateUserDto: UpdateUserDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
@@ -72,13 +72,13 @@ export class UserController {
     if (uploadedFile) {
       updateUserDto.image_name = file?.filename;
     }
-    return this.userService.update(id, updateUserDto);
+    return this.userService.update(user.sub, updateUserDto);
   }
 
-  @Put(':id')
-  updatePut(@Param('id') id: string, @Body() body: UpdateUserDto) {
-    return this.userService.update(id, body);
-  }
+  // @Put(':id')
+  // updatePut(@Param('id') id: string, @Body() body: UpdateUserDto) {
+  //   return this.userService.update(id, body);
+  // }
 
   @Delete(':id')
   delete(@Param('id') id: string) {

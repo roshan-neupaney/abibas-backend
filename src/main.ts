@@ -29,7 +29,6 @@ async function bootstrap() {
     AppModule,
     new ExpressAdapter(server),
   );
-
   const config = new DocumentBuilder()
     .setTitle('API')
     .setDescription('API')
